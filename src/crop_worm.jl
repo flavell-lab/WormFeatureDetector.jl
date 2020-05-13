@@ -83,7 +83,8 @@ Crops and rotates an image, and outputs the resulting image, along with its tran
     If kept at its default value "median", the median of the image will be used.
     Otherwise, it can be set to a numerical value.
 """
-function crop_rotate_output(infile::String, outdir::String, centroid_out::String, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids; fill="median", output_mhd=true, output_centroids=true)
+function crop_rotate_output(infile::String, outdir::String, centroid_out::String, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids;
+        fill="median", output_mhd=true, output_centroids=true)
     filename = split(split(infile, "/")[end], ".")[1]
     mhd = MHD(infile)
     img = read_img(mhd)
@@ -99,6 +100,7 @@ function crop_rotate_output(infile::String, outdir::String, centroid_out::String
     end
     return new_head
 end
+
 
 
 """
@@ -128,7 +130,7 @@ Returns a dictionary of error flags that arose during the computations.
 - `edge_threshold::Integer` (default 5): if the boundary of the worm is closer than this to the edge of the frame, set error flag.
 - `crop_pad` (default [5,5,2]): pad the fourth convex hull by this much before cropping to it.
 """
-function crop_rotate_images(rootpath::String, MHD_in::String, MHD_out::String, img_prefix::String, channel::Integer=2,
+function crop_rotate_images(rootpath::String, MHD_in::String, MHD_out::String, img_prefix::String, channel::Integer,
         centroids_in::String, centroids_out::String, head_file::String,
         imsize; tf=[10,10,30,30], max_d=[30,50,50,100], hd_threshold::Integer=100, 
         vc_threshold::Integer=300, num_centroids_threshold::Integer=90, edge_threshold::Integer=5, crop_pad=[5,5,2])
@@ -139,10 +141,12 @@ function crop_rotate_images(rootpath::String, MHD_in::String, MHD_out::String, i
             try
                 q_flags[i] = []
                 centroids = read_centroids_roi(joinpath(rootpath, centroids_in, "$(i).txt"))
-                head, q_flag, crop_x, crop_y, crop_z, theta, worm_centroid = find_head(centroids, imsize)
+                head, q_flag, crop_x, crop_y, crop_z, theta, worm_centroid = find_head(centroids, imsize;
+                        tf=tf, max_d=max_d, hd_threshold=hd_threshold, vc_threshold=vc_threshold,
+                        num_centroids_threshold=num_centroids_threshold, edge_threshold=edge_threshold, crop_pad=crop_pad)
                 append!(q_flags[i], q_flag)
                 new_head = crop_output(joinpath(rootpath, MHD_in, img_prefix*"_t"*string(frame1, pad=4)*"_ch$(channel).mhd"),
-                    joinpath(rootpath, MHD_out), joinpath(rootpath, centroids_out, "$(i).txt"), crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids)
+                   joinpath(rootpath, MHD_out), joinpath(rootpath, centroids_out, "$(i).txt"), crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids)
                 write(f, string(i)*"    "*replace(string(new_head), r"\(|\,|\)" => "")*"\n")
             catch e
                 append!(q_flags[i], "ERROR: $(e)")
