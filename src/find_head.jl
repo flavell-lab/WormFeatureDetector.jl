@@ -114,7 +114,7 @@ The fourth convex hull is used to generate cropping parameters, intended to ensu
 function find_head(centroids, imsize; tf=[10,10,30,30], max_d=[30,50,50,100], hd_threshold::Integer=100, 
         vc_threshold::Integer=300, num_centroids_threshold::Integer=90, edge_threshold::Integer=5, crop_pad=[5,5,2])
     len = length(max_d)
-    threshold = [ceil(length(centroids)/tf[i]) for i in 1:len]
+    threshold = [Int64(ceil(length(centroids)/tf[i])) for i in 1:len]
     # Create three local convex hulls with different thresholds
     # Use the first and second to determine which direction the head is in
     # by exploiting asymmetry of neuron distribution
