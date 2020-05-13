@@ -92,7 +92,7 @@ function elastix_difficulty_wormcurve(rootpath::String, frame1::Integer, frame2:
         fig = heatmap(transpose(img1), fillcolor=:grayscale, aspect_ratio=1, flip=false, showaxis=false, legend=false)
         scatter!(fig, x1_c.-1, y1_c.-1, color="red");
         scatter!(fig, [x1_c[1].-1], [y1_c[1].-1], color="cyan", markersize=5);
-        savefig(fig, joinpath(rootpath, figure_save_path, "$(frames[i]).png"));
+        savefig(fig, joinpath(rootpath, figure_save_path, "$(frame1).png"));
     end
 
     return curve_distance(x1_c, y1_c, x2_c, y2_c, headpt=headpt, tailpt=tailpt)
