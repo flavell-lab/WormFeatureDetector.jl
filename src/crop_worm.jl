@@ -141,7 +141,7 @@ function crop_rotate_images(rootpath::String, MHD_in::String, MHD_out::String, i
                 centroids = read_centroids_roi(joinpath(rootpath, centroids_in, "$(i).txt"))
                 head, q_flag, crop_x, crop_y, crop_z, theta, worm_centroid = find_head(centroids, imsize)
                 append!(q_flags[i], q_flag)
-                new_head = crop_output(joinpath(rootpath, MHD_in, img_prefix*"_t"*string(frame1, pad=4)*"_ch$(channel).mhd",
+                new_head = crop_output(joinpath(rootpath, MHD_in, img_prefix*"_t"*string(frame1, pad=4)*"_ch$(channel).mhd"),
                     joinpath(rootpath, MHD_out), joinpath(rootpath, centroids_out, "$(i).txt"), crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids)
                 write(f, string(i)*"    "*replace(string(new_head), r"\(|\,|\)" => "")*"\n")
             catch e
