@@ -134,8 +134,8 @@ function crop_rotate_images(rootpath::String, frames, MHD_in::String, MHD_out::S
         vc_threshold::Integer=300, num_centroids_threshold::Integer=90, edge_threshold::Integer=5, crop_pad=[5,5,2])
 
     q_flags = Dict()
-    create_dir(MHD_out)
-    create_dir(centroids_out)
+    create_dir(joinpath(rootpath, MHD_out))
+    create_dir(joinpath(rootpath, centroids_out))
 
     # get image size
     img = read_img(MHD(joinpath(rootpath, MHD_in, img_prefix*"_t"*string(frames[1], pad=4)*"_ch$(channel).mhd")))
