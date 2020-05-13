@@ -4,17 +4,23 @@ A collection of heuristics for locating various features of the worm.
 
 ## Worm curvature similarity heuristic
 
-### Worm head location
+### Worm head location, and cropping
 
-In order to use this heuristic, it's necessary to determine the location of the worm's head. This is implemented with the 
+In order to use this heuristic, it's necessary to determine the location of the worm's head.
+The algorithm that finds the worm's head location does this by effectively turning the worm into a blob and finding an extremum of that blob. It also proves to be useful to crop the images and delete non-worm regions to save on computation time in later steps of registration, so the algorithm also does that as well. Note that this algorithm only works on data where neuron centroids have already been computed (for example, by the `SegmentationTools.jl` package).
+Example code:
 
-### Worm curvature heuristic
+```julia
+crop_rotate_images("/path/to/data", 1:100, "MHD_filtered", "MHD_filtered_cropped", "img_prefix", 2, "centroids", "centroids_cropped", "head_pos.txt")
+```
+
+### Using the worm curvature heuristic
 
 This heuristic (implemented by the `elastix_difficulty_wormcurve` method) posits that two frames are similar to each other if the worm's curvature is similar, as this would result in a smaller amount of bending. It computes an estimate for the worm's centerline based on the images, and outputs its centerline fits as images which can be inspected for errors.
 
-This heuristic requires data that has nuclear-localized fluorescent proteins in enough neurons to get an estimate of the worm shape, and has already been filtered (eg by the `GPUFilter.jl` package). It also requires you to have previously determined the worm's head location, such as in the `WormFeatureDetector.jl` package.
+This heuristic requires data that has nuclear-localized fluorescent proteins in enough neurons to get an estimate of the worm shape, and has already been filtered (eg by the `GPUFilter.jl` package). It also requires you to have previously determined the worm's head location.
 
-Example code, if you were using this heuristic with `RegistrationGraph.jl`:
+Example code, if you are using this heuristic with `RegistrationGraph.jl`:
 
 ```julia
 heur = (rootpath, frame1, frame2) -> elastix_difficulty_wormcurve(rootpath, frame1, frame2, "MHD", "head_pos.txt", "img_prefix", 2; figure_save_path="worm_curves")
@@ -22,10 +28,36 @@ heur = (rootpath, frame1, frame2) -> elastix_difficulty_wormcurve(rootpath, fram
 
 ## HSN and nerve ring location heuristic
 
-This heuristic (implemented by the `elastix_difficulty_HSN_NR` method) tries to identify frames with similar HSN and nerve ring locations to be registered together. It only works on data taken with a non-nuclear-localized fluorescent protein expressed only in HSN, and it also requires you to have previously identified the HSN and nerve ring locations in each frame, which is implemented in the `WormFeatureDetector.jl` package.
+### Finding HSN and the nerve ring
 
-Example code:
+As a prerequisite to use this heuristic, HSN and the nerve ring must be located in each frame. You will likely need to modify the parameters on a per-dataset basis.
 
 ```julia
-generate_elastix_difficulty_HSN_NR("/path/to/data", "hsn_locs.txt", "nr_locs.txt", 1:100, "elastix_difficulty.txt")
+# initialize HSN heuristics to values that work on this dataset
+threshold_hsn_outer=2.5
+threshold_hsn_inner=3.5
+density_hsn_outer=0.1
+density_hsn_inner=0.7
+radius_hsn_outer=[20,20,1]
+radius_hsn_inner=[3,3,0]
+radius_hsn_threshold=[5,5,3]
+
+find_hsn("/path/to/data", 1:100, "MHD", "img_prefix", 1, threshold_hsn_outer, threshold_hsn_inner, density_hsn_outer, density_hsn_inner, radius_hsn_outer, radius_hsn_inner, radius_hsn_threshold; outfile="hsn_locs.txt")
+
+# similarly, initialize nerve ring heuristics
+threshold_nr=2.5
+region_nr=[350:450, 1:70, 5:30]
+radius_nr=[5,5,3]
+
+find_nerve_ring("/path/to/data", 1:100, "MHD", "img_prefix", 1, threshold_nr, region_nr, radius_nr; outfile="nr_locs.txt")
+```
+
+### Using the HSN and nerve ring heuristic
+
+This heuristic (implemented by the `elastix_difficulty_HSN_NR` method) tries to identify frames with similar HSN and nerve ring locations to be registered together. It only works on data taken with a non-nuclear-localized fluorescent protein expressed only in HSN, and it also requires you to have previously identified the HSN and nerve ring locations in each frame.
+
+Example code, if you are using this heuristic with `RegistrationGraph.jl`:
+
+```julia
+heur = (rootpath, frame1, frame2) -> elastix_difficulty_hsn_nr(rootpath, frame1, frame2, "hsn_locs.txt", "nr_locs.txt", 1:100)
 ```

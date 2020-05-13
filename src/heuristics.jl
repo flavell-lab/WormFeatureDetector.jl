@@ -5,13 +5,13 @@ Computes registration difficulty between two frames based on the HSN and nerve r
 - `rootpath::String`: working directory path; all other directory inputs are relative to this
 - `frame1::Integer`: first frame
 - `frame2::Integer`: second frame
-- `nr_location_file::String`: path to file containing nerve ring locations
 - `hsn_location_file::String`: path to file containing HSN locations
+- `nr_location_file::String`: path to file containing nerve ring locations
 # Heuristic parameters (optional):
 - `nr_weight::Real`: weight of nerve ring location relative to HSN location. Default 1.
 """
 function elastix_difficulty_hsn_nr(rootpath::String, frame1::Integer, frame2::Integer, 
-        nr_location_file::String, hsn_location_file::String; nr_weight::Real=1)
+        hsn_location_file::String, nr_location_file::String; nr_weight::Real=1)
     # load HSN locations
     hsn_locs = Dict()
     open(joinpath(rootpath, hsn_location_file)) do hsn
@@ -62,7 +62,7 @@ and that the head position of the worm is known in each frame.
 - `head_path::String`: path to a file containing positions of the worm's head at each frame.
 - `img_prefix::String`: image prefix not including the timestamp. It is assumed that each frame's filename
     will be, eg, `img_prefix_t0123_ch2.mhd` for frame 123 with channel=2.
-- `channel::Integer`: channel being used. Can be entered as any data type.
+- `channel::Integer`: channel being used.
 
 ## Other parameters (optional):
 - `figure_save_path::String`: Path to save figures of worm curvature. If left blank, figures will not be generated.

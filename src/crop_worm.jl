@@ -110,16 +110,15 @@ Returns a dictionary of error flags that arose during the computations.
 
 # Arguments
 - `rootpath::String`: working directory path; all other directory inputs are relative to this
+- `frames`: frames to be cropped
 - `MHD_in::String`: directory of the input (non-cropped) MHD files
 - `MHD_out::String`: directory of the output cropped MHD files
 - `img_prefix::String`: image prefix not including the timestamp. It is assumed that each frame's filename
     will be, eg, `img_prefix_t0123_ch2.mhd` for frame 123 with channel=2.
-- `channel::Integer`: channel being used. Can be entered as any data type.
+- `channel::Integer`: channel being used.
 - `centroids_in::String`: directory of the input centroid files
 - `centroids_out::String`: directory of the transformed centroid files
 - `head_file::String`: name of the file for storing head locations. It will be generated within the `centroids_out` directory.
-- `imsize`: size of the images to be transformed
-- `frames`: frames to be computed
 
 ## Optional keyword arguments
 - `tf` (default [10,10,30,30]): threshold for required neuron density for convex hull `i` is (number of centroids) / `tf[i]`
@@ -130,14 +129,23 @@ Returns a dictionary of error flags that arose during the computations.
 - `edge_threshold::Integer` (default 5): if the boundary of the worm is closer than this to the edge of the frame, set error flag.
 - `crop_pad` (default [5,5,2]): pad the fourth convex hull by this much before cropping to it.
 """
-function crop_rotate_images(rootpath::String, MHD_in::String, MHD_out::String, img_prefix::String, channel::Integer,
-        centroids_in::String, centroids_out::String, head_file::String,
-        imsize; tf=[10,10,30,30], max_d=[30,50,50,100], hd_threshold::Integer=100, 
+function crop_rotate_images(rootpath::String, frames, MHD_in::String, MHD_out::String, img_prefix::String, channel::Integer,
+        centroids_in::String, centroids_out::String, head_file::String; tf=[10,10,30,30], max_d=[30,50,50,100], hd_threshold::Integer=100, 
         vc_threshold::Integer=300, num_centroids_threshold::Integer=90, edge_threshold::Integer=5, crop_pad=[5,5,2])
 
     q_flags = Dict()
+    create_dir(MHD_out)
+    create_dir(centroids_out)
+
+    # get image size
+    img_1 = read_img(MHD(joinpath(rootpath, MHD_in, img_prefix*"_t"*string(frames[1], pad=4)*"_ch$(channel).mhd")))
+    imsize = size(img)
+
+    n = length(frames)
+
     open(joinpath(rootpath, centroids_out, head_file), "w") do f
-        @showprogress for i=1:459
+        @showprogress for i in 1:n
+            frame = frames[i]
             try
                 q_flags[i] = []
                 centroids = read_centroids_roi(joinpath(rootpath, centroids_in, "$(i).txt"))

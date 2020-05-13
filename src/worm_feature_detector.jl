@@ -75,31 +75,36 @@ Can optionally choose to output data to a file, for use with heuristics.
 
 # Arguments:
 `path::String`: working directory path; all other directory inputs are relative to this
-`names::Array{String,1}`: filenames of images to process
+- `frames`: frames of images to process
+- `mhd::String`: path to MHD directory, where the image will be found.
+- `img_prefix::String`: image prefix not including the timestamp. It is assumed that each frame's filename
+    will be, eg, `img_prefix_t0123_ch2.mhd` for frame 123 with channel=2.
+- `channel::Integer`: channel being used.
 - `threshold_outer::Real`: pixel intensity brightness value. Pixels below this intensity are excluded
 - `density_outer::Real`: density of nearby pixels that must meet the outer threshold for the original pixel to **NOT** be counted
 - `radius_outer`: distances in each dimension (in pixels) away from the original pixel that are counted as nearby.
-    For example, `radius = [3, 2, 1]` would allow a distance of three pixels in the x-direction, two pixels in the y-direction,
-    and one pixel in the z-direction.
+For example, `radius = [3, 2, 1]` would allow a distance of three pixels in the x-direction, two pixels in the y-direction,
+and one pixel in the z-direction.
 - `threshold_inner::Real`: pixel intensity brightness value. Pixels below this intensity are excluded
 - `density_inner::Real`: density of nearby pixels that must meet the inner threshold for the original pixel to be counted
 - `radius_inner`: distances in each dimension (in pixels) away from the original pixel that are counted as nearby.
-    For example, `radius = [3, 2, 1]` would allow a distance of three pixels in the x-direction, two pixels in the y-direction,
-    and one pixel in the z-direction.
+For example, `radius = [3, 2, 1]` would allow a distance of three pixels in the x-direction, two pixels in the y-direction,
+and one pixel in the z-direction.
 - `radius_detection`: If multiple locations remain as possible HSN locations after both thresholding steps,
     the location with the most other such points within `radius_detection` of it is chosen. 
 
 ## Optional keyword arguments
-- `mhd::String`: path to MHD directory, where the image will be found. Default "MHD".
 - `outfile::String`: path to HSN output file. If left blank (default), no output will be written.
 """
-function find_hsn(path::String, names::Array{String,1}, threshold_outer::Real, density_outer::Real, radius_outer, 
-        threshold_inner::Real, density_inner::Real, radius_inner, radius_detection; mhd::String="MHD", outfile::String="")
+function find_hsn(path::String, frames, mhd::String, img_prefix::String, channel::Integer, threshold_outer::Real, density_outer::Real, radius_outer, 
+        threshold_inner::Real, density_inner::Real, radius_inner, radius_detection; outfile::String="")
     result_imgs = []
     hsn_locs_all = []
     best_hsn_locs = []
-    @showprogress for name in names
-        img = read_img(MHD(joinpath(path, mhd, name*".mhd")))
+    n = length(names)
+    @showprogress for 1=1:n
+        name = names[i]
+        img = read_img(MHD(joinpath(rootpath, MHD, img_prefix*"_t"*string(frame, pad=4)*"_ch$(channel).mhd")))
         sx, sy, sz = size(img)
         dx,dy,dz = radius_outer
         result_img = zeros(UInt16, size(img))
@@ -169,7 +174,12 @@ end
 Finds location of the nerve ring in a frame. Can optionally output nerve ring locations to a file for use with heuristics.
 
 # Arguments:
-`paths::String`: working directory path; all other directory inputs are relative to this
+- `path::String`: working directory path; all other directory inputs are relative to this
+- `frames`: frames of images to process
+- `mhd::String`: path to MHD directory, where the image will be found.
+- `img_prefix::String`: image prefix not including the timestamp. It is assumed that each frame's filename
+    will be, eg, `img_prefix_t0123_ch2.mhd` for frame 123 with channel=2.
+- `channel::Integer`: channel being used.
 `names::Array{String,1}`: filename of image to process
 - `threshold::Real`: pixel intensity brightness value. Pixels below this intensity are excluded
 - `region`: region of the image that will be searched for the nerve ring. Generically, you should try to include the nerve ring
@@ -178,15 +188,16 @@ Finds location of the nerve ring in a frame. Can optionally output nerve ring lo
     as the nerve ring location.
 
 ## Optional keyword arguments
-- `mhd::String`: path to MHD directory, where the image will be found. Default "MHD". 
+
 - `outfile::String`: path to nerve ring output file. If left blank (default), no output will be written.
 """
-function find_nerve_ring(path::String, names::Array{String,1}, threshold::Real, region, radius; mhd="MHD", outfile::String="")
+function find_nerve_ring(path::String, frames, mhd::String, img_prefix::String, channel::Integer, threshold::Real, region, radius; outfile::String="")
     result_imgs = []
     nr_locs_all = []
     best_nr_locs = []
-    @showprogress for name in names
-        img = read_img(MHD(joinpath(path, mhd, name*".mhd")))
+    n = length(names)
+    @showprogress for i=1:n
+        img = read_img(MHD(joinpath(rootpath, MHD, img_prefix*"_t"*string(frame, pad=4)*"_ch$(channel).mhd")))
         result_img = zeros(UInt16, size(img))
         sx, sy, sz = size(img)
         dx, dy, dz = radius
@@ -221,6 +232,13 @@ function find_nerve_ring(path::String, names::Array{String,1}, threshold::Real, 
         push!(result_imgs, result_img)
         push!(nr_locs_all, nr_locs)
         push!(best_nr_locs, best_nr_loc)
+    end
+    if outfile != ""
+        open(joinpath(root, outfile), "w") do f
+            for (i,name) in names
+                write(f, string(name)*" "*string(best_nr_locs[i][1])*" "*string(best_nr_locs[i][2])*" "*string(best_nr_locs[i][3])*"\n")
+            end
+        end
     end
     return result_img, nr_locs, best_nr_loc, result_img_marker
 end
