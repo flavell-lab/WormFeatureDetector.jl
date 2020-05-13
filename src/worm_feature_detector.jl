@@ -102,7 +102,7 @@ function find_hsn(path::String, frames, mhd::String, img_prefix::String, channel
     hsn_locs_all = []
     best_hsn_locs = []
     n = length(names)
-    @showprogress for 1=1:n
+    @showprogress for i=1:n
         name = names[i]
         img = read_img(MHD(joinpath(rootpath, MHD, img_prefix*"_t"*string(frame, pad=4)*"_ch$(channel).mhd")))
         sx, sy, sz = size(img)
