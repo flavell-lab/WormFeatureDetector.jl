@@ -138,7 +138,7 @@ function crop_rotate_images(rootpath::String, frames, MHD_in::String, MHD_out::S
     create_dir(centroids_out)
 
     # get image size
-    img_1 = read_img(MHD(joinpath(rootpath, MHD_in, img_prefix*"_t"*string(frames[1], pad=4)*"_ch$(channel).mhd")))
+    img = read_img(MHD(joinpath(rootpath, MHD_in, img_prefix*"_t"*string(frames[1], pad=4)*"_ch$(channel).mhd")))
     imsize = size(img)
 
     n = length(frames)
