@@ -23,7 +23,7 @@ This heuristic requires data that has nuclear-localized fluorescent proteins in 
 Example code, if you are using this heuristic with `RegistrationGraph.jl`:
 
 ```julia
-heur = (rootpath, frame1, frame2) -> elastix_difficulty_wormcurve(rootpath, frame1, frame2, "MHD", "head_pos.txt", "img_prefix", 2; figure_save_path="worm_curves")
+heur = (rootpath, frame1, frame2) -> elastix_difficulty_wormcurve(rootpath, frame1, frame2, "MHD_filtered_cropped", "head_pos.txt", "img_prefix", 2; figure_save_path="worm_curves")
 ```
 
 ## HSN and nerve ring location heuristic
