@@ -1,6 +1,7 @@
 module WormFeatureDetector
 
-using WormCurveFinder, MHDIO, Statistics, Plots, ProgressMeter, Images, ImageTransformations, LinearAlgebra, CoordinateTransformations
+using WormCurveFinder, MHDIO, Statistics, Plots, ProgressMeter, Images, ImageTransformations,
+        LinearAlgebra, CoordinateTransformations, StaticArrays
 
 include("worm_feature_detector.jl")
 include("worm_curve_finder.jl")
