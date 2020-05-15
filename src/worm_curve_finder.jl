@@ -1,20 +1,4 @@
 """
-Computes maximum intensity projection of `array` along the dimensions `dims`
-"""
-function maxprj(array; dims=3)
-    dropdims(maximum(array; dims=dims), dims=dims)
-end
-
-"""
-Creates directory `dirpath` if it doesn't exist
-"""
-function create_dir(dirpath::String)
-    if !isdir(dirpath)
-        mkdir(dirpath)
-    end
-end
-
-"""
 Aligns the points `headpt` and `tailpt` of curve 2 to match curve 1, and returns the transformed curve 2.
 Translates, rotates, and scales all other curve-points accordingly.
 # Arguments:
