@@ -5,6 +5,8 @@ version = "0.1.0"
 
 [deps]
 CoordinateTransformations = "150eb455-5306-5404-9cee-2592286d6298"
+FlavellBase = "88015601-1e04-46e4-b006-ffd03bd63f42"
+ImageDataIO = "3d2e8b00-a1b7-4eb6-bd24-c7e2252788fb"
 ImageTransformations = "02fcd773-0e25-5acc-982a-7f6622650795"
 Images = "916415d5-f1e6-5110-898d-aaa5f9f070e0"
 Interact = "c601a237-2ae4-5e1e-952c-7a85b0c7eef1"

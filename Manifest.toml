@@ -175,6 +175,14 @@ git-tree-sha1 = "3ba9ea634d4c8b289d590403b4a06f8e227a6238"
 uuid = "53c48c17-4a7d-5ca2-90c5-79b7896eea93"
 version = "0.8.0"
 
+[[FlavellBase]]
+deps = ["Statistics"]
+git-tree-sha1 = "06a7a24be61f95acb0682f7d3b9b48a1e5461e7a"
+repo-rev = "master"
+repo-url = "git@github.com:flavell-lab/FlavellBase.jl.git"
+uuid = "88015601-1e04-46e4-b006-ffd03bd63f42"
+version = "0.1.0"
+
 [[FreeType2_jll]]
 deps = ["Bzip2_jll", "Libdl", "Pkg", "Zlib_jll"]
 git-tree-sha1 = "7d900f32a3788d4eacac2bfa3bf5c770179c8afd"
@@ -240,6 +248,13 @@ deps = ["Colors", "FixedPointNumbers", "Graphics", "MappedArrays", "MosaicViews"
 git-tree-sha1 = "a652c05f8f374861580d420b420fddf3e2e84312"
 uuid = "a09fc81d-aa75-5fe9-8630-4744c3626534"
 version = "0.8.14"
+
+[[ImageDataIO]]
+git-tree-sha1 = "e4c52083f2c2841460976b5b22a8e9d467be2625"
+repo-rev = "master"
+repo-url = "git@github.com:flavell-lab/ImageDataIO.jl.git"
+uuid = "3d2e8b00-a1b7-4eb6-bd24-c7e2252788fb"
+version = "0.1.0"
 
 [[ImageDistances]]
 deps = ["ColorVectorSpace", "Distances", "ImageCore", "LinearAlgebra", "MappedArrays", "Statistics"]
@@ -502,9 +517,9 @@ version = "0.12.1"
 
 [[Parsers]]
 deps = ["Dates", "Test"]
-git-tree-sha1 = "72c3451932513427caffbd8bab15643ad693804b"
+git-tree-sha1 = "f0abb338b4d00306500056a3fd44c221b8473ef2"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "1.0.3"
+version = "1.0.4"
 
 [[Pidfile]]
 deps = ["FileWatching", "Test"]
@@ -628,9 +643,9 @@ uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [[SpecialFunctions]]
 deps = ["OpenSpecFun_jll"]
-git-tree-sha1 = "e19b98acb182567bcb7b75bb5d9eedf3a3b5ec6c"
+git-tree-sha1 = "a69e1eaf3397fbb5a4d718538463e5cc20ef42a4"
 uuid = "276daf66-3868-5448-9aa4-cd146d93841b"
-version = "0.10.0"
+version = "0.10.2"
 
 [[StaticArrays]]
 deps = ["LinearAlgebra", "Random", "Statistics"]
@@ -663,9 +678,9 @@ deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
 [[UnPack]]
-git-tree-sha1 = "bc9ef72a4a826740895bf2772b48c21f9a1c13a7"
+git-tree-sha1 = "d4bfa022cd30df012700cf380af2141961bb3bfb"
 uuid = "3a884ed6-31ef-47d7-9d2a-63182c4928ed"
-version = "1.0.0"
+version = "1.0.1"
 
 [[Unicode]]
 uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
