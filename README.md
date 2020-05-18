@@ -2,6 +2,10 @@
 
 A collection of heuristics for locating various features of the worm.
 
+## Prerequisites
+
+This package requires you to have previously installed the `FlavellBase.jl`, `ImageDataIO.jl`, and `MHDIO.jl` packages from the `flavell-lab` github repository.
+
 ## Worm curvature similarity heuristic
 
 ### Worm head location, and cropping
