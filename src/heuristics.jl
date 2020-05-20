@@ -62,11 +62,9 @@ function elastix_difficulty_wormcurve(rootpath::String, frame1::Integer, frame2:
         downscale::Integer=3, num_points::Integer=9, headpt::Integer=4, tailpt::Integer=7)
 
 
-    img1_path = joinpath(rootpath, mhd_path, img_prefix*"_t"*string(frame1, pad=4)*"_ch$(channel).mhd")
-    img1 = Float64.(maxprj(read_img(MHD(img1_path)), dims=3))
+    img1 = Float64.(maxprj(read_mhd(rootpath, img_prefix, mhd_path, frame1, channel), dims=3))
 
-    img2_path = joinpath(rootpath, mhd_path, img_prefix*"_t"*string(frame2, pad=4)*"_ch$(channel).mhd")
-    img2 = Float64.(maxprj(read_img(MHD(img2_path)), dims=3))
+    img2 = Float64.(maxprj(read_mhd(rootpath, img_prefix, mhd_path, frame2, channel), dims=3))
 
     head_pos = read_head_pos(joinpath(rootpath, head_path))
 
