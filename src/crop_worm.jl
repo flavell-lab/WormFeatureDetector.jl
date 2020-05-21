@@ -133,11 +133,12 @@ Returns a dictionary of error flags that arose during the computations.
 - `crop_pad` (default [5,5,2]): pad the fourth convex hull by this much before cropping to it.
 - `img_roi_path_input::String` (default empty string): path to image ROI files to crop. 
 - `img_roi_path_output::String` (default empty string): output path for cropped image ROI files
+- `z_shift::Integer` (default 0): shift in the z-direction. This should be left at 0.
 """
 function crop_rotate_images(rootpath::String, frames, MHD_in::String, MHD_out::String, img_prefix::String, channel::Integer,
         centroids_in::String, centroids_out::String, head_file::String; tf=[10,10,30,30], max_d=[30,50,50,100], hd_threshold::Integer=100, 
         vc_threshold::Integer=300, num_centroids_threshold::Integer=90, edge_threshold::Integer=5, crop_pad=[5,5,2],
-        img_roi_path_input::String="", img_roi_path_output::String="")
+        img_roi_path_input::String="", img_roi_path_output::String="", z_shift=0)
 
     q_flags = Dict()
     create_dir(joinpath(rootpath, MHD_out))
@@ -159,6 +160,8 @@ function crop_rotate_images(rootpath::String, frames, MHD_in::String, MHD_out::S
                 head, q_flag, crop_x, crop_y, crop_z, theta, worm_centroid = find_head(centroids, imsize;
                         tf=tf, max_d=max_d, hd_threshold=hd_threshold, vc_threshold=vc_threshold,
                         num_centroids_threshold=num_centroids_threshold, edge_threshold=edge_threshold, crop_pad=crop_pad)
+                
+                crop_z = (crop_z[1] + z_shift, crop_z[2] + z_shift)
                 q_flags[i] = q_flag
                 
                 if img_roi_path_input != "" && img_roi_path_output != ""
