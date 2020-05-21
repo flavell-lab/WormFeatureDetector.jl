@@ -106,6 +106,7 @@ end
 """
 Finds head location of each worm frame, crops the frame, and outputs the new cropped image,
 along with transformed centroids and head locations.
+Can optionally output transformed image ROIs as well.
 Returns a dictionary of error flags that arose during the computations.
 
 # Arguments
@@ -116,7 +117,7 @@ Returns a dictionary of error flags that arose during the computations.
 - `img_prefix::String`: image prefix not including the timestamp. It is assumed that each frame's filename
     will be, eg, `img_prefix_t0123_ch2.mhd` for frame 123 with channel=2.
 - `channel::Integer`: channel being used.
-- `centroids_in::String`: directory of the input centroid files
+- `centroids_in::String`: directory of the input centroid files.
 - `centroids_out::String`: directory of the transformed centroid files
 - `head_file::String`: name of the file for storing head locations. It will be generated within the `centroids_out` directory.
 
@@ -128,15 +129,19 @@ Returns a dictionary of error flags that arose during the computations.
 - `num_centroids_threshold::Integer` (default 90): if there are fewer than this many centroids, set error flag.
 - `edge_threshold::Integer` (default 5): if the boundary of the worm is closer than this to the edge of the frame, set error flag.
 - `crop_pad` (default [5,5,2]): pad the fourth convex hull by this much before cropping to it.
+- `img_roi_path_input::String` (default empty string): path to image ROI files to crop. 
+- `img_roi_path_output::String` (default empty string): output path for cropped image ROI files
 """
 function crop_rotate_images(rootpath::String, frames, MHD_in::String, MHD_out::String, img_prefix::String, channel::Integer,
         centroids_in::String, centroids_out::String, head_file::String; tf=[10,10,30,30], max_d=[30,50,50,100], hd_threshold::Integer=100, 
-        vc_threshold::Integer=300, num_centroids_threshold::Integer=90, edge_threshold::Integer=5, crop_pad=[5,5,2])
+        vc_threshold::Integer=300, num_centroids_threshold::Integer=90, edge_threshold::Integer=5, crop_pad=[5,5,2],
+        img_roi_path_input::String="", img_roi_path_output::String="")
 
     q_flags = Dict()
     create_dir(joinpath(rootpath, MHD_out))
     create_dir(joinpath(rootpath, centroids_out))
-
+    create_dir(joinpath(rootpath, img_roi_path_output))
+    
     # get image size
     img = read_img(MHD(joinpath(rootpath, MHD_in, img_prefix*"_t"*string(frames[1], pad=4)*"_ch$(channel).mhd")))
     imsize = size(img)
@@ -153,8 +158,15 @@ function crop_rotate_images(rootpath::String, frames, MHD_in::String, MHD_out::S
                         tf=tf, max_d=max_d, hd_threshold=hd_threshold, vc_threshold=vc_threshold,
                         num_centroids_threshold=num_centroids_threshold, edge_threshold=edge_threshold, crop_pad=crop_pad)
                 q_flags[i] = q_flag
+                
+                if img_roi_path_input != "" && img_roi_path_output != ""
+                    new_head = crop_rotate_output(joinpath(rootpath, img_roi_path_input, "$(frame).mhd"),
+                        joinpath(rootpath, img_roi_path_output), joinpath(rootpath, centroids_out, "$(i).txt"), crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids, fill=0)
+                end
+                
                 new_head = crop_rotate_output(joinpath(rootpath, MHD_in, img_prefix*"_t"*string(frame, pad=4)*"_ch$(channel).mhd"),
                    joinpath(rootpath, MHD_out), joinpath(rootpath, centroids_out, "$(i).txt"), crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids)
+                
                 write(f, string(i)*"    "*replace(string(new_head), r"\(|\,|\)" => "")*"\n")
             catch e
                 push!(q_flags[i], "ERROR: $(e)")
