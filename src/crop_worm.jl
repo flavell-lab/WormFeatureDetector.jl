@@ -17,10 +17,12 @@ Rotates and then crops an image, along with its head and centroid locations.
     If kept at its default value "median", the median of the image will be used.
     Otherwise, it can be set to a numerical value.
 
+`degree`: degree of the interpolation. Default `Linear()`; can set to `Constant()` for nearest-neighbors.
+
 Outputs a tuple `(new_img, new_head, new_centroids)` corresponding to transformed
 versions of `img`, `head`, and `centroids`.
 """
-function crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids; fill="median")
+function crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids; fill="median", degree=Linear())
     new_img = zeros(Int16, (crop_x[2] - crop_x[1] + 1, crop_y[2] - crop_y[1] + 1, crop_z[2] - crop_z[1] + 1))
     if fill == "median"
         fill_val = Int16(round(median(img)))
@@ -35,7 +37,7 @@ function crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid, head, ce
     cy = (crop_y[1], crop_y[2])
     tfm = recenter(RotMatrix(theta), worm_centroid)
     for z=cz[1]:cz[2]
-        new_img_z = warp(img[:,:,z], tfm)
+        new_img_z = warp(img[:,:,z], tfm, degree)
         # make sure we aren't trying to crop past image boundary - use harshest cropping
         cx = (max(cx[1], new_img_z.offsets[1]+1), min(cx[2], new_img_z.offsets[1] + size(new_img_z)[1]))
         cy = (max(cy[1], new_img_z.offsets[2]+1), min(cy[2], new_img_z.offsets[2] + size(new_img_z)[2]))
@@ -84,7 +86,7 @@ Crops and rotates an image, and outputs the resulting image, along with its tran
     Otherwise, it can be set to a numerical value.
 """
 function crop_rotate_output(infile::String, outdir::String, centroid_out::String, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids;
-        fill="median", output_mhd=true, output_centroids=true)
+        fill="median", degree=Linear(), output_mhd=true, output_centroids=true)
     filename = split(split(infile, "/")[end], ".")[1]
     mhd = MHD(infile)
     img = read_img(mhd)
@@ -141,7 +143,7 @@ function crop_rotate_images(rootpath::String, frames, MHD_in::String, MHD_out::S
     create_dir(joinpath(rootpath, MHD_out))
     create_dir(joinpath(rootpath, centroids_out))
     create_dir(joinpath(rootpath, img_roi_path_output))
-    
+
     # get image size
     img = read_img(MHD(joinpath(rootpath, MHD_in, img_prefix*"_t"*string(frames[1], pad=4)*"_ch$(channel).mhd")))
     imsize = size(img)
@@ -161,7 +163,8 @@ function crop_rotate_images(rootpath::String, frames, MHD_in::String, MHD_out::S
                 
                 if img_roi_path_input != "" && img_roi_path_output != ""
                     new_head = crop_rotate_output(joinpath(rootpath, img_roi_path_input, "$(frame).mhd"),
-                        joinpath(rootpath, img_roi_path_output), joinpath(rootpath, centroids_out, "$(i).txt"), crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids, fill=0)
+                        joinpath(rootpath, img_roi_path_output), joinpath(rootpath, centroids_out, "$(i).txt"), 
+                        crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids, fill=0, degree=Constant())
                 end
                 
                 new_head = crop_rotate_output(joinpath(rootpath, MHD_in, img_prefix*"_t"*string(frame, pad=4)*"_ch$(channel).mhd"),
