@@ -91,7 +91,7 @@ function crop_rotate_output(infile::String, outdir::String, centroid_out::String
     mhd = MHD(infile)
     img = read_img(mhd)
     spacing = split(mhd.mhd_spec_dict["ElementSpacing"], " ")
-    new_img, new_head, new_centroids = crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids; fill=fill)
+    new_img, new_head, new_centroids = crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids; fill=fill, degree=degree)
     if output_mhd
         write_raw(outdir*"/"*filename*".raw", new_img)
         write_MHD_spec(outdir*"/"*filename*".mhd", spacing[1], spacing[end], size(new_img)[1],
