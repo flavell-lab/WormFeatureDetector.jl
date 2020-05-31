@@ -193,7 +193,7 @@ function crop_rotate_images(rootpath::String, frames, MHD_in::String, MHD_out::S
                 write(f, string(i)*"    "*replace(string(new_head), r"\(|\,|\)" => "")*"\n")
 
                 g = open(joinpath(rootpath, centroids_out, crop_param_file), "w")
-                write(g, "$(i)    $(crop_x)    $(crop_y)    $(crop_z)    $(theta)    $(worm_centroid)"
+                write(g, "$(i)    $(crop_x)    $(crop_y)    $(crop_z)    $(theta)    $(worm_centroid)")
                 close(g)
             catch e
                 push!(q_flags[i], "ERROR: $(e)")
