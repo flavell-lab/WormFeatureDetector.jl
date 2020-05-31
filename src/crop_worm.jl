@@ -72,21 +72,24 @@ Crops and rotates an image, and outputs the resulting image, along with its tran
 - `infile::String`: input MHD file
 - `outdir::String`: output directory for transformed MHD file
 - `centroid_out::String`: output file for transformed centroid file
-`crop_x`: crop amount in x-dimension
-`crop_y`: crop amount in y-dimension
-`crop_z`: crop amount in z-dimension
-`theta`: rotation amount in xy-plane
-`worm_centroid`: centroid of the worm (to rotate around). NOT the centroids of ROIs in the worm.
-`head`: position of the worm's head.
-`centroids`: the worm's ROI centroids
+- `crop_x`: crop amount in x-dimension
+- `crop_y`: crop amount in y-dimension
+- `crop_z`: crop amount in z-dimension
+- `theta`: rotation amount in xy-plane
+- `worm_centroid`: centroid of the worm (to rotate around). NOT the centroids of ROIs in the worm.
+- `head`: position of the worm's head.
+- `centroids`: the worm's ROI centroids
 
 ## Optional keyword argument
-`fill`: what value to put in pixels that were rotated in from outside the original image.
+- `fill`: what value to put in pixels that were rotated in from outside the original image.
     If kept at its default value "median", the median of the image will be used.
     Otherwise, it can be set to a numerical value.
+- `degree`: degree of the interpolation. Default `Linear()`; can set to `Constant()` for nearest-neighbors.
+- `output_mhd::Bool` (default true): should a MHD file be output?
+- `output_centroids::Bool` (default true): should centroids be output?
 """
 function crop_rotate_output(infile::String, outdir::String, centroid_out::String, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids;
-        fill="median", degree=Linear(), output_mhd=true, output_centroids=true)
+        fill="median", degree=Linear(), output_mhd::Bool=true, output_centroids::Bool=true)
     filename = split(split(infile, "/")[end], ".")[1]
     mhd = MHD(infile)
     img = read_img(mhd)
@@ -122,6 +125,7 @@ Returns a dictionary of error flags that arose during the computations.
 - `centroids_in::String`: directory of the input centroid files.
 - `centroids_out::String`: directory of the transformed centroid files
 - `head_file::String`: name of the file for storing head locations. It will be generated within the `centroids_out` directory.
+- `crop_param_file:String`: name of the file for storing cropping parmeters. It will be generated within the `centroids_out` directory.
 
 ## Optional keyword arguments
 - `tf` (default [10,10,30,30]): threshold for required neuron density for convex hull `i` is (number of centroids) / `tf[i]`
@@ -133,12 +137,14 @@ Returns a dictionary of error flags that arose during the computations.
 - `crop_pad` (default [5,5,2]): pad the fourth convex hull by this much before cropping to it.
 - `img_roi_path_input::String` (default empty string): path to image ROI files to crop. 
 - `img_roi_path_output::String` (default empty string): output path for cropped image ROI files
+- `h5_input::String` (default empty string): path of H5 images to crop. Reads the `predictions` field from `rootpath/h5_input/frame_predictions.h5`
+- `h5_output::String` (default empty string): path of cropped H5 image files. Saves to `rootpath/h5_output/frame.h5`
 - `z_shift::Integer` (default 0): shift in the z-direction. This should be left at 0.
 """
 function crop_rotate_images(rootpath::String, frames, MHD_in::String, MHD_out::String, img_prefix::String, channel::Integer,
-        centroids_in::String, centroids_out::String, head_file::String; tf=[10,10,30,30], max_d=[30,50,50,100], hd_threshold::Integer=100, 
+        centroids_in::String, centroids_out::String, head_file::String, crop_param_file::String; tf=[10,10,30,30], max_d=[30,50,50,100], hd_threshold::Integer=100, 
         vc_threshold::Integer=300, num_centroids_threshold::Integer=90, edge_threshold::Integer=5, crop_pad=[5,5,2],
-        img_roi_path_input::String="", img_roi_path_output::String="", z_shift=0)
+        img_roi_path_input::String="", img_roi_path_output::String="", h5_input="", h5_output="", z_shift::Integer=0)
 
     q_flags = Dict()
     create_dir(joinpath(rootpath, MHD_out))
@@ -169,6 +175,17 @@ function crop_rotate_images(rootpath::String, frames, MHD_in::String, MHD_out::S
                         joinpath(rootpath, img_roi_path_output), joinpath(rootpath, centroids_out, "$(i).txt"), 
                         crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids, fill=0, degree=Constant())
                 end
+
+                if h5_input != "" && h5_output != ""
+                    f = h5open(joinpath(rootpath, h5_input, "$(frame)_predictions.h5"))
+                    img = read(f, "predictions")[:,:,:,2]
+                    close(f)
+                    new_img, new_head, new_centroids = crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids; fill=0)
+                    g = h5open(joinpath(rootpath, h5_output, "$(frame)_predictions.h5"), "w")
+                    g["predictions"] = new_img
+                    close(g)
+                end
+                    
                 
                 new_head = crop_rotate_output(joinpath(rootpath, MHD_in, img_prefix*"_t"*string(frame, pad=4)*"_ch$(channel).mhd"),
                    joinpath(rootpath, MHD_out), joinpath(rootpath, centroids_out, "$(i).txt"), crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids)
