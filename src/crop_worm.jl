@@ -177,13 +177,13 @@ function crop_rotate_images(rootpath::String, frames, MHD_in::String, MHD_out::S
                 end
 
                 if h5_input != "" && h5_output != ""
-                    f = h5open(joinpath(rootpath, h5_input, "$(frame)_predictions.h5"))
-                    img = read(f, "predictions")[:,:,:,2]
-                    close(f)
+                    h = h5open(joinpath(rootpath, h5_input, "$(frame)_predictions.h5"))
+                    img = read(h, "predictions")[:,:,:,2]
+                    close(h)
                     new_img, new_head, new_centroids = crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids; fill=0)
-                    g = h5open(joinpath(rootpath, h5_output, "$(frame)_predictions.h5"), "w")
-                    g["predictions"] = new_img
-                    close(g)
+                    h = h5open(joinpath(rootpath, h5_output, "$(frame)_predictions.h5"), "w")
+                    h["predictions"] = new_img
+                    close(h)
                 end
                     
                 
@@ -191,6 +191,10 @@ function crop_rotate_images(rootpath::String, frames, MHD_in::String, MHD_out::S
                    joinpath(rootpath, MHD_out), joinpath(rootpath, centroids_out, "$(i).txt"), crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids)
                 
                 write(f, string(i)*"    "*replace(string(new_head), r"\(|\,|\)" => "")*"\n")
+
+                g = open(joinpath(rootpath, centroids_out, crop_param_file), "w")
+                write(g, "$(i)    $(crop_x)    $(crop_y)    $(crop_z)    $(theta)    $(worm_centroid)"
+                close(g)
             catch e
                 push!(q_flags[i], "ERROR: $(e)")
             end

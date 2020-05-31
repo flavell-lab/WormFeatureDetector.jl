@@ -16,7 +16,7 @@ The algorithm that finds the worm's head location does this by effectively turni
 Example code:
 
 ```julia
-crop_rotate_images("/path/to/data", 1:100, "MHD_filtered", "MHD_filtered_cropped", "img_prefix", 2, "centroids", "centroids_cropped", "head_pos.txt")
+crop_rotate_images("/path/to/data", 1:100, "MHD_filtered", "MHD_filtered_cropped", "img_prefix", 2, "centroids", "centroids_cropped", "head_pos.txt", "crop_params.txt")
 ```
 
 ### Using the worm curvature heuristic
