@@ -3,29 +3,29 @@ Rotates and then crops an image, along with its head and centroid locations.
 
 # Arguments
 
-`img`: image to transform (3D)
-`crop_x`: crop amount in x-dimension
-`crop_y`: crop amount in y-dimension
-`crop_z`: crop amount in z-dimension
-`theta`: rotation amount in xy-plane
-`worm_centroid`: centroid of the worm (to rotate around). NOT the centroids of ROIs in the worm.
-`head`: position of the worm's head.
-`centroids`: the worm's ROI centroids
+- `img`: image to transform (3D)
+- `crop_x`: crop amount in x-dimension
+- `crop_y`: crop amount in y-dimension
+- `crop_z`: crop amount in z-dimension
+- `theta`: rotation amount in xy-plane
+- `worm_centroid`: centroid of the worm (to rotate around). NOT the centroids of ROIs in the worm.
+- `head`: position of the worm's head.
+- `centroids`: the worm's ROI centroids
 
 ## Optional keyword argument
-`fill`: what value to put in pixels that were rotated in from outside the original image.
+- `fill`: what value to put in pixels that were rotated in from outside the original image.
     If kept at its default value "median", the median of the image will be used.
     Otherwise, it can be set to a numerical value.
-
-`degree`: degree of the interpolation. Default `Linear()`; can set to `Constant()` for nearest-neighbors.
+- `degree`: degree of the interpolation. Default `Linear()`; can set to `Constant()` for nearest-neighbors.
+- `dtype`: type of data in resulting image
 
 Outputs a tuple `(new_img, new_head, new_centroids)` corresponding to transformed
 versions of `img`, `head`, and `centroids`.
 """
-function crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids; fill="median", degree=Linear())
-    new_img = zeros(Int16, (crop_x[2] - crop_x[1] + 1, crop_y[2] - crop_y[1] + 1, crop_z[2] - crop_z[1] + 1))
+function crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids; fill="median", degree=Linear(), dtype=Int16)
+    new_img = zeros(dtype, (crop_x[2] - crop_x[1] + 1, crop_y[2] - crop_y[1] + 1, crop_z[2] - crop_z[1] + 1))
     if fill == "median"
-        fill_val = Int16(round(median(img)))
+        fill_val = dtype(round(median(img)))
     else
         fill_val = fill
     end
@@ -181,7 +181,7 @@ function crop_rotate_images(rootpath::String, frames, MHD_in::String, MHD_out::S
                     h = h5open(joinpath(rootpath, h5_input, "$(frame)_predictions.h5"))
                     img = read(h, "predictions")[:,:,:,2]
                     close(h)
-                    new_img, new_head, new_centroids = crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids; fill=0)
+                    new_img, new_head, new_centroids = crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids; fill=0, dtype=Float64)
                     h = h5open(joinpath(rootpath, h5_output, "$(frame)_predictions.h5"), "w")
                     h["predictions"] = new_img
                     close(h)
