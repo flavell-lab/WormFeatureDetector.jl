@@ -48,7 +48,10 @@ function crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid, head, ce
                 if val != val || val == 0
                     val = fill_val
                 end
-                new_img[x-cx[1]+1,y-cy[1]+1,z-cz[1]+1] = Int16(round(val))
+                if dtype <: Integer
+                    val = round(val)
+                end
+                new_img[x-cx[1]+1,y-cy[1]+1,z-cz[1]+1] = dtype(val)
             end
         end
     end
