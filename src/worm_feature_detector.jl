@@ -180,7 +180,6 @@ Finds location of the nerve ring in a frame. Can optionally output nerve ring lo
 - `img_prefix::String`: image prefix not including the timestamp. It is assumed that each frame's filename
     will be, eg, `img_prefix_t0123_ch2.mhd` for frame 123 with channel=2.
 - `channel::Integer`: channel being used.
-`names::Array{String,1}`: filename of image to process
 - `threshold::Real`: pixel intensity brightness value. Pixels below this intensity are excluded
 - `region`: region of the image that will be searched for the nerve ring. Generically, you should try to include the nerve ring
     and exclude any other regions (such as gut granules, HSN soma, etc)
@@ -195,7 +194,7 @@ function find_nerve_ring(path::String, frames, mhd::String, img_prefix::String, 
     result_imgs = []
     nr_locs_all = []
     best_nr_locs = []
-    n = length(names)
+    n = length(frames)
     @showprogress for i=1:n
         frame = frames[i]
         img = read_mhd(rootpath, MHD, img_prefix, frame, channel)
