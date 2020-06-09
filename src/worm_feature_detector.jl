@@ -74,7 +74,7 @@ correspond to gut fluorescence or neuropil (by excluding too-dense regions), the
 Can optionally choose to output data to a file, for use with heuristics.
 
 # Arguments:
-`path::String`: working directory path; all other directory inputs are relative to this
+- `path::String`: working directory path; all other directory inputs are relative to this
 - `frames`: frames of images to process
 - `mhd::String`: path to MHD directory, where the image will be found.
 - `img_prefix::String`: image prefix not including the timestamp. It is assumed that each frame's filename
