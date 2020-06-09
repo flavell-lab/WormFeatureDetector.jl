@@ -104,7 +104,7 @@ function find_hsn(path::String, frames, mhd::String, img_prefix::String, channel
     n = length(frames)
     @showprogress for i=1:n
         frame = frames[i]
-        img = read_mhd(path, MHD, img_prefix, frame, channel)
+        img = read_mhd(path, mhd, img_prefix, frame, channel)
         sx, sy, sz = size(img)
         dx,dy,dz = radius_outer
         result_img = zeros(UInt16, size(img))
@@ -197,7 +197,7 @@ function find_nerve_ring(path::String, frames, mhd::String, img_prefix::String, 
     n = length(frames)
     @showprogress for i=1:n
         frame = frames[i]
-        img = read_mhd(path, MHD, img_prefix, frame, channel)
+        img = read_mhd(path, mhd, img_prefix, frame, channel)
         result_img = zeros(UInt16, size(img))
         sx, sy, sz = size(img)
         dx, dy, dz = radius
