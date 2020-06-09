@@ -194,6 +194,7 @@ function find_nerve_ring(path::String, frames, mhd::String, img_prefix::String, 
     result_imgs = []
     nr_locs_all = []
     best_nr_locs = []
+    nr_markers = []
     n = length(frames)
     @showprogress for i=1:n
         frame = frames[i]
@@ -232,6 +233,7 @@ function find_nerve_ring(path::String, frames, mhd::String, img_prefix::String, 
         push!(result_imgs, result_img)
         push!(nr_locs_all, nr_locs)
         push!(best_nr_locs, best_nr_loc)
+        push!(nr_markers, result_img_marker)
     end
     if outfile != ""
         open(joinpath(root, outfile), "w") do f
@@ -240,7 +242,7 @@ function find_nerve_ring(path::String, frames, mhd::String, img_prefix::String, 
             end
         end
     end
-    return result_imgs, nr_locs, best_nr_loc, result_img_marker
+    return result_imgs, nr_locs_all, best_nr_locs, nr_markers
 end
 
 
