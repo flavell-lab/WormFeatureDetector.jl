@@ -240,7 +240,7 @@ function find_nerve_ring(path::String, frames, mhd::String, img_prefix::String, 
             end
         end
     end
-    return result_img, nr_locs, best_nr_loc, result_img_marker
+    return result_imgs, nr_locs, best_nr_loc, result_img_marker
 end
 
 
