@@ -34,8 +34,8 @@ Finds, returns, and outputs gut granule masks for a set of images. The masks fil
 1 is not a gut granule, and 0 is a gut granule.
 
 # Arguments
-`path::String`: working directory path; all other directory inputs are relative to this
-`names::Array{String,1}`: filenames of images to process
+- `path::String`: working directory path; all other directory inputs are relative to this
+- `names::Array{String,1}`: filenames of images to process
 - `threshold::Real`: pixel intensity brightness value. Pixels below this intensity are excluded
 - `density::Real`: density of nearby pixels that must meet the threshold for the original pixel to be counted
 - `radius`: distances in each dimension (in pixels) away from the original pixel that are counted as nearby.
@@ -104,7 +104,7 @@ function find_hsn(path::String, frames, mhd::String, img_prefix::String, channel
     n = length(frames)
     @showprogress for i=1:n
         frame = frames[i]
-        img = read_mhd(rootpath, MHD, img_prefix, frame, channel)
+        img = read_mhd(path, MHD, img_prefix, frame, channel)
         sx, sy, sz = size(img)
         dx,dy,dz = radius_outer
         result_img = zeros(UInt16, size(img))
@@ -160,7 +160,7 @@ function find_hsn(path::String, frames, mhd::String, img_prefix::String, channel
     end
     if outfile != ""
         open(joinpath(root, outfile), "w") do f
-            for (i,name) in names
+            for (i,name) in frames
                 write(f, string(name)*" "*string(best_hsn_locs[i][1])*" "*string(best_hsn_locs[i][2])*" "*string(best_hsn_locs[i][3])*"\n")
             end
         end
@@ -197,7 +197,7 @@ function find_nerve_ring(path::String, frames, mhd::String, img_prefix::String, 
     n = length(frames)
     @showprogress for i=1:n
         frame = frames[i]
-        img = read_mhd(rootpath, MHD, img_prefix, frame, channel)
+        img = read_mhd(path, MHD, img_prefix, frame, channel)
         result_img = zeros(UInt16, size(img))
         sx, sy, sz = size(img)
         dx, dy, dz = radius
@@ -235,7 +235,7 @@ function find_nerve_ring(path::String, frames, mhd::String, img_prefix::String, 
     end
     if outfile != ""
         open(joinpath(root, outfile), "w") do f
-            for (i,name) in names
+            for (i,name) in frames
                 write(f, string(name)*" "*string(best_nr_locs[i][1])*" "*string(best_nr_locs[i][2])*" "*string(best_nr_locs[i][3])*"\n")
             end
         end

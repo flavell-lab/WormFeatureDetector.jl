@@ -10,7 +10,7 @@ include("find_head.jl")
 include("crop_worm.jl")
 
 export
-    output_gut_granules,
+    find_gut_granules,
     find_hsn,
     find_nerve_ring,
     curve_distance,
