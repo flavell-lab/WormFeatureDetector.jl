@@ -13,6 +13,7 @@ export
     find_gut_granules,
     find_hsn,
     find_nerve_ring,
+    in_conv_hull,
     curve_distance,
     elastix_difficulty_hsn_nr,
     elastix_difficulty_wormcurve,
