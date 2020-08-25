@@ -1,7 +1,7 @@
 name = "WormFeatureDetector"
 uuid = "bca2e52d-4ef9-4344-ad0d-293e22557a67"
 authors = ["goldenratio1618 <adamatanas@gmail.com>"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 CoordinateTransformations = "150eb455-5306-5404-9cee-2592286d6298"
