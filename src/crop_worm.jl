@@ -32,7 +32,7 @@ function crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid; fill="me
     cz = (max(crop_z[1], 1), min(crop_z[2], imsize[3]))
     cx = (crop_x[1], crop_x[2])
     cy = (crop_y[1], crop_y[2])
-    tfm = recenter(RotMatrix(theta), worm_centroid)
+    tfm = recenter(RotMatrix(theta), worm_centroid[1:2])
     for z=cz[1]:cz[2]
         new_img_z = warp(img[:,:,z], tfm, degree)
         # make sure we aren't trying to crop past image boundary - use harshest cropping
