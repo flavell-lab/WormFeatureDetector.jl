@@ -7,7 +7,6 @@ include("worm_feature_detector.jl")
 include("worm_curve_finder.jl")
 include("heuristics.jl")
 include("find_head.jl")
-include("crop_worm.jl")
 
 export
     find_gut_granules,
@@ -17,6 +16,5 @@ export
     curve_distance,
     elastix_difficulty_hsn_nr,
     elastix_difficulty_wormcurve,
-    centroids_to_img,
-    crop_rotate
+    centroids_to_img
 end # module
