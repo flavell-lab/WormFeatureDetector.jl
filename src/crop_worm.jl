@@ -70,9 +70,9 @@ Generates cropping parameters from a frame by detecting the worm's location with
 """
 function get_cropping_parameters(img; threshold::Real=3, size_threshold=10, crop_pad=[3,3,3])
     # threshold image to detect worm
-    thresh_img = consolidate_labeled_img(labels_map(fast_scanning(img .> mean(img) + threshold*std(frame), 0.2)), size_threshold);
+    thresh_img = consolidate_labeled_img(labels_map(fast_scanning(img .> mean(img) + threshold*std(img), 0.2)), size_threshold);
     # extract worm points
-    frame_worm_nonzero = map(x->collect(Tuple(x)), filter(x->frame_worm[x]!=0, CartesianIndices(frame_worm)))
+    frame_worm_nonzero = map(x->collect(Tuple(x)), filter(x->thresh_img[x]!=0, CartesianIndices(thresh_img)))
     # get center of worm
     worm_centroid = reduce((x,y)->x.+y, frame_worm_nonzero) ./ length(frame_worm_nonzero)
     # get axis of worm
