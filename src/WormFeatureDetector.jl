@@ -19,6 +19,5 @@ export
     elastix_difficulty_wormcurve,
     centroids_to_img,
     crop_rotate,
-    crop_rotate_output,
-    crop_rotate_images
+    get_cropping_parameters
 end # module
