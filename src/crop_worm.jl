@@ -1,5 +1,5 @@
 """
-Rotates and then crops an image, along with its head and centroid locations.
+Rotates and then crops an image, optionally along with its head and centroid locations.
 
 # Arguments
 
@@ -9,20 +9,17 @@ Rotates and then crops an image, along with its head and centroid locations.
 - `crop_z`: crop amount in z-dimension
 - `theta`: rotation amount in xy-plane
 - `worm_centroid`: centroid of the worm (to rotate around). NOT the centroids of ROIs in the worm.
-- `head`: position of the worm's head.
-- `centroids`: the worm's ROI centroids
 
 ## Optional keyword argument
 - `fill`: what value to put in pixels that were rotated in from outside the original image.
-    If kept at its default value "median", the median of the image will be used.
-    Otherwise, it can be set to a numerical value.
+If kept at its default value "median", the median of the image will be used.
+Otherwise, it can be set to a numerical value.
 - `degree`: degree of the interpolation. Default `Linear()`; can set to `Constant()` for nearest-neighbors.
 - `dtype`: type of data in resulting image
 
-Outputs a tuple `(new_img, new_head, new_centroids)` corresponding to transformed
-versions of `img`, `head`, and `centroids`.
+Outputs a new image that is the cropped and rotated version of `img`.
 """
-function crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids; fill="median", degree=Linear(), dtype=Int16)
+function crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid; fill="median", degree=Linear(), dtype=Int16)
     new_img = zeros(dtype, (crop_x[2] - crop_x[1] + 1, crop_y[2] - crop_y[1] + 1, crop_z[2] - crop_z[1] + 1))
     if fill == "median"
         fill_val = dtype(round(median(img)))
@@ -55,154 +52,55 @@ function crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid, head, ce
             end
         end
     end
-    # find new head and worm_centroid positions
-    h = SVector{2}(head)
-    new_h = inv(tfm)(h)
-    new_head = (Int32(round(new_h[1]))-cx[1]+1, Int32(round(new_h[2]))-cy[1]+1)
-    new_centroids = []
-    for cent in centroids
-        c = SVector{2}(cent[1:2])
-        new_c = inv(tfm)(c)
-        push!(new_centroids, (round(new_c[1])-cx[1]+1, round(new_c[2])-cy[1]+1, round(cent[3]-cz[1]+1)))
-    end
-    return (new_img[1:cx[2]-cx[1]+1, 1:cy[2]-cy[1]+1, 1:cz[2]-cz[1]+1], new_head, new_centroids)
+
+    return new_img[1:cx[2]-cx[1]+1, 1:cy[2]-cy[1]+1, 1:cz[2]-cz[1]+1]
 end
 
+
 """
-Crops and rotates an image, and outputs the resulting image, along with its transformed centroids.
+Generates cropping parameters from a frame by detecting the worm's location with thresholding and noise removal.
 
 # Arguments
-- `infile::String`: input MHD file
-- `outdir::String`: output directory for transformed MHD file
-- `centroid_out::String`: output file for transformed centroid file
-- `crop_x`: crop amount in x-dimension
-- `crop_y`: crop amount in y-dimension
-- `crop_z`: crop amount in z-dimension
-- `theta`: rotation amount in xy-plane
-- `worm_centroid`: centroid of the worm (to rotate around). NOT the centroids of ROIs in the worm.
-- `head`: position of the worm's head.
-- `centroids`: the worm's ROI centroids
+- `img`: Image to crop
 
-## Optional keyword argument
-- `fill`: what value to put in pixels that were rotated in from outside the original image.
-    If kept at its default value "median", the median of the image will be used.
-    Otherwise, it can be set to a numerical value.
-- `degree`: degree of the interpolation. Default `Linear()`; can set to `Constant()` for nearest-neighbors.
-- `output_mhd::Bool` (default true): should a MHD file be output?
-- `output_centroids::Bool` (default true): should centroids be output?
+# Optional keyword arguments
+- `threshold`: Number of standard deviations above mean for a pixel to be considered part of the worm
+- `size_threshold`: Number of adjacent pixels that must meet the threshold to be counted.
+- `crop_pad`: Number of pixels to pad in each dimension.
 """
-function crop_rotate_output(infile::String, outdir::String, centroid_out::String, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids;
-        fill="median", degree=Linear(), output_mhd::Bool=true, output_centroids::Bool=true)
-    filename = split(split(infile, "/")[end], ".")[1]
-    mhd = MHD(infile)
-    img = read_img(mhd)
-    spacing = split(mhd.mhd_spec_dict["ElementSpacing"], " ")
-    new_img, new_head, new_centroids = crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids; fill=fill, degree=degree)
-    if output_mhd
-        write_raw(outdir*"/"*filename*".raw", new_img)
-        write_MHD_spec(outdir*"/"*filename*".mhd", spacing[1], spacing[end], size(new_img)[1],
-            size(new_img)[2], size(new_img)[3], filename*".raw")
-    end
-    if output_centroids
-        write_centroids(new_centroids, centroid_out)
-    end
-    return new_head
+function get_cropping_parameters(img; threshold::Real=3, size_threshold=10, crop_pad=[3,3,3])
+    # threshold image to detect worm
+    thresh_img = consolidate_labeled_img(labels_map(fast_scanning(img .> mean(img) + threshold*std(frame), 0.2)), size_threshold);
+    # extract worm points
+    frame_worm_nonzero = map(x->collect(Tuple(x)), filter(x->frame_worm[x]!=0, CartesianIndices(frame_worm)))
+    # get center of worm
+    worm_centroid = reduce((x,y)->x.+y, frame_worm_nonzero) ./ length(frame_worm_nonzero)
+    # get axis of worm
+    deltas = map(x->collect(x.-worm_centroid), frame_worm_nonzero)
+    cov_mat = cov(deltas)
+    mat_eigvals = eigvals(cov_mat)
+    mat_eigvecs = eigvecs(cov_mat)
+    eigvals_order = sortperm(mat_eigvals, rev=true)
+    # PC1 will be the long dimension of the worm
+    # We only want to rotate in xy plane, so project to that plane
+    long_axis = mat_eigvecs[:,eigvals_order[1]]
+    long_axis[3] = 0
+    long_axis = long_axis ./ sqrt(sum(long_axis .^ 2))
+    short_axis = [long_axis[2], -long_axis[1], 0]
+    theta = atan(long_axis[2]/long_axis[1])
+
+    
+    # get coordinates of points in worm axis-dimension
+    distances = map(x->sum(x.*long_axis), deltas)
+    distances_short = map(x->sum(x.*short_axis), deltas)
+    distances_z = map(x->sum(x.*[0,0,1]), deltas)
+
+
+    # get cropping parameters
+    crop_x = (Int64(floor(minimum(distances) + worm_centroid[1])) - crop_pad[1], Int64(ceil(maximum(distances) + worm_centroid[1])) + crop_pad[1])
+    crop_y = (Int64(floor(minimum(distances_short) + worm_centroid[2])) - crop_pad[2], Int64(ceil(maximum(distances_short) + worm_centroid[2])) + crop_pad[2])
+    crop_z = (Int64(floor(minimum(distances_z) + worm_centroid[3])) - crop_pad[3], Int64(ceil(maximum(distances_z) + worm_centroid[3])) + crop_pad[3])
+
+    return (crop_x, crop_y, crop_z, theta, worm_centroid)
 end
 
-
-
-"""
-Finds head location of each worm frame, crops the frame, and outputs the new cropped image,
-along with transformed centroids and head locations.
-Can optionally output transformed image ROIs as well.
-Returns a dictionary of error flags that arose during the computations.
-
-# Arguments
-- `rootpath::String`: working directory path; all other directory inputs are relative to this
-- `frames`: frames to be cropped
-- `MHD_in::String`: directory of the input (non-cropped) MHD files
-- `MHD_out::String`: directory of the output cropped MHD files
-- `img_prefix::String`: image prefix not including the timestamp. It is assumed that each frame's filename
-    will be, eg, `img_prefix_t0123_ch2.mhd` for frame 123 with channel=2.
-- `channel::Integer`: channel being used.
-- `centroids_in::String`: directory of the input centroid files.
-- `centroids_out::String`: directory of the transformed centroid files
-- `head_file::String`: name of the file for storing head locations. It will be generated within the `centroids_out` directory.
-- `crop_param_file:String`: name of the file for storing cropping parmeters. It will be generated within the `centroids_out` directory.
-
-## Optional keyword arguments
-- `tf` (default [10,10,30,30]): threshold for required neuron density for convex hull `i` is (number of centroids) / `tf[i]`
-- `max_d` (default [30,50,50,100]): the maximum distance for a neuron to be counted as part of convex hull `i` is `max_d[i]`
-- `hd_threshold::Integer` (default 100): if convex hulls 2 and 3 give head locations farther apart than this many pixels, set error flag.
-- `vc_threshold::Integer` (default 300): if convex hulls 2 and 3 give tail locations farther apart than this many pixels, set error flag.
-- `num_centroids_threshold::Integer` (default 90): if there are fewer than this many centroids, set error flag.
-- `edge_threshold::Integer` (default 5): if the boundary of the worm is closer than this to the edge of the frame, set error flag.
-- `crop_pad` (default [5,5,2]): pad the fourth convex hull by this much before cropping to it.
-- `img_roi_path_input::String` (default empty string): path to image ROI files to crop. 
-- `img_roi_path_output::String` (default empty string): output path for cropped image ROI files
-- `h5_input::String` (default empty string): path of H5 images to crop. Reads the `predictions` field from `rootpath/h5_input/frame_predictions.h5`
-- `h5_output::String` (default empty string): path of cropped H5 image files. Saves to `rootpath/h5_output/frame.h5`
-- `z_shift::Integer` (default 0): shift in the z-direction. This should be left at 0.
-"""
-function crop_rotate_images(rootpath::String, frames, MHD_in::String, MHD_out::String, img_prefix::String, channel::Integer,
-        centroids_in::String, centroids_out::String, head_file::String, crop_param_file::String; tf=[10,10,30,30], max_d=[30,50,50,100], hd_threshold::Integer=100, 
-        vc_threshold::Integer=300, num_centroids_threshold::Integer=90, edge_threshold::Integer=5, crop_pad=[5,5,2],
-        img_roi_path_input::String="", img_roi_path_output::String="", h5_input="", h5_output="", z_shift::Integer=0)
-
-    q_flags = Dict()
-    create_dir(joinpath(rootpath, MHD_out))
-    create_dir(joinpath(rootpath, centroids_out))
-    create_dir(joinpath(rootpath, img_roi_path_output))
-    create_dir(joinpath(rootpath, h5_output))
-
-    # get image size
-    img = read_img(MHD(joinpath(rootpath, MHD_in, img_prefix*"_t"*string(frames[1], pad=4)*"_ch$(channel).mhd")))
-    imsize = size(img)
-
-    n = length(frames)
-
-    open(joinpath(rootpath, centroids_out, head_file), "w") do f
-        @showprogress for i in 1:n
-            frame = frames[i]
-            try
-                q_flags[i] = []
-                centroids = read_centroids_roi(joinpath(rootpath, centroids_in, "$(i).txt"))
-                head, q_flag, crop_x, crop_y, crop_z, theta, worm_centroid = find_head(centroids, imsize;
-                        tf=tf, max_d=max_d, hd_threshold=hd_threshold, vc_threshold=vc_threshold,
-                        num_centroids_threshold=num_centroids_threshold, edge_threshold=edge_threshold, crop_pad=crop_pad)
-                
-                crop_z = (crop_z[1] + z_shift, crop_z[2] + z_shift)
-                q_flags[i] = q_flag
-                
-                if img_roi_path_input != "" && img_roi_path_output != ""
-                    new_head = crop_rotate_output(joinpath(rootpath, img_roi_path_input, "$(frame).mhd"),
-                        joinpath(rootpath, img_roi_path_output), joinpath(rootpath, centroids_out, "$(i).txt"), 
-                        crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids, fill=0, degree=Constant())
-                end
-
-                if h5_input != "" && h5_output != ""
-                    h = h5open(joinpath(rootpath, h5_input, "$(frame)_predictions.h5"))
-                    img = read(h, "predictions")[:,:,:,2]
-                    close(h)
-                    new_img, new_head, new_centroids = crop_rotate(img, crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids; fill=0, dtype=Float64)
-                    h = h5open(joinpath(rootpath, h5_output, "$(frame)_predictions.h5"), "w")
-                    h["predictions"] = new_img
-                    close(h)
-                end
-                    
-                
-                new_head = crop_rotate_output(joinpath(rootpath, MHD_in, img_prefix*"_t"*string(frame, pad=4)*"_ch$(channel).mhd"),
-                   joinpath(rootpath, MHD_out), joinpath(rootpath, centroids_out, "$(i).txt"), crop_x, crop_y, crop_z, theta, worm_centroid, head, centroids)
-                
-                write(f, string(i)*"    "*replace(string(new_head), r"\(|\,|\)" => "")*"\n")
-
-                g = open(joinpath(rootpath, centroids_out, crop_param_file), "w")
-                write(g, "$(i)    $(crop_x)    $(crop_y)    $(crop_z)    $(theta)    $(worm_centroid)")
-                close(g)
-            catch e
-                push!(q_flags[i], "ERROR: $(e)")
-            end
-        end
-    end
-    return q_flags
-end
