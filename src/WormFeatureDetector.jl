@@ -18,6 +18,5 @@ export
     elastix_difficulty_hsn_nr,
     elastix_difficulty_wormcurve,
     centroids_to_img,
-    crop_rotate,
-    get_cropping_parameters
+    crop_rotate
 end # module
