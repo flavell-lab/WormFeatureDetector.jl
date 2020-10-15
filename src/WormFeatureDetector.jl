@@ -10,6 +10,7 @@ include("find_head.jl")
 
 export
     find_gut_granules,
+    find_head,
     find_hsn,
     find_nerve_ring,
     in_conv_hull,
