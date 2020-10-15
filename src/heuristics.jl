@@ -79,7 +79,7 @@ function elastix_difficulty_wormcurve(rootpath::String, frame1::Integer, frame2:
     if frame2 in keys(curves)
         x2_c, y2_c = curves[frame2]
     else
-        x2_c, y2_c = find_curve(img1, downscale, head_pos[frame2]./2^downscale, num_points)
+        x2_c, y2_c = find_curve(img2, downscale, head_pos[frame2]./2^downscale, num_points)
     end
 
     if figure_save_path != ""

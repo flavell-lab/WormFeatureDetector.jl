@@ -101,7 +101,6 @@ The third convex hull is used to find the tip of the worm's head.
 - `vc_threshold::Integer` (default 300): if convex hulls 2 and 3 give tail locations farther apart than this many pixels, set error flag.
 - `num_centroids_threshold::Integer` (default 90): if there are fewer than this many centroids, set error flag.
 - `edge_threshold::Integer` (default 5): if the boundary of the worm is closer than this to the edge of the frame, set error flag.
-- `crop_pad` (default [5,5,2]): pad the fourth convex hull by this much before cropping to it.
 
 # Outputs a tuple `(head_pos, q_flag, crop_x, crop_y, crop_z, theta, centroid)`
 - `head_pos`: position of the worm's head.
@@ -111,7 +110,7 @@ The third convex hull is used to find the tip of the worm's head.
 - `centroid`: centroid of the worm
 """
 function find_head(centroids, imsize; tf=[10,10,30], max_d=[30,50,50], hd_threshold::Integer=100, 
-        vc_threshold::Integer=300, num_centroids_threshold::Integer=90, edge_threshold::Integer=5, crop_pad=[5,5,2])
+        vc_threshold::Integer=300, num_centroids_threshold::Integer=90, edge_threshold::Integer=5)
     len = length(max_d)
     threshold = [Int64(ceil(length(centroids)/tf[i])) for i in 1:len]
     # Create three local convex hulls with different thresholds
