@@ -84,16 +84,15 @@ end
 
 # TODO: Safe padding (currently, padding could possibly result in indices outside array)
 """
-Finds the tip of the nose of the worm in each frame, cropping parameters, and warns of bad frames.
+Finds the tip of the nose of the worm in each frame, and warns of bad frames.
 Uses a series of blob-approximations of the worm with different sensitivities, by using local convex hull.
 The convex hulls should be set up in increasing order (so the last convex hull is the most generous).
 The difference between the first two convex hulls is used to determine the direction of the worm's head.
 The third convex hull is used to find the tip of the worm's head.
-The fourth convex hull is used to generate cropping parameters, intended to ensure all neurons are counted.
 
 # Arguments
 - `centroids`: the locations of the neuron centroids
-- `imsize`: the image size in the X-Z plane
+- `imsize`: the image size
 
 ## Optional keyword arguments
 - `tf` (default [10,10,30,30]): threshold for required neuron density for convex hull `i` is (number of centroids) / `tf[i]`
@@ -102,7 +101,6 @@ The fourth convex hull is used to generate cropping parameters, intended to ensu
 - `vc_threshold::Integer` (default 300): if convex hulls 2 and 3 give tail locations farther apart than this many pixels, set error flag.
 - `num_centroids_threshold::Integer` (default 90): if there are fewer than this many centroids, set error flag.
 - `edge_threshold::Integer` (default 5): if the boundary of the worm is closer than this to the edge of the frame, set error flag.
-- `crop_pad` (default [5,5,2]): pad the fourth convex hull by this much before cropping to it.
 
 # Outputs a tuple `(head_pos, q_flag, crop_x, crop_y, crop_z, theta, centroid)`
 - `head_pos`: position of the worm's head.
@@ -111,8 +109,8 @@ The fourth convex hull is used to generate cropping parameters, intended to ensu
 - `theta`: amount by which to rotate the image to align it in the x-y plane
 - `centroid`: centroid of the worm
 """
-function find_head(centroids, imsize; tf=[10,10,30,30], max_d=[30,50,50,100], hd_threshold::Integer=100, 
-        vc_threshold::Integer=300, num_centroids_threshold::Integer=90, edge_threshold::Integer=5, crop_pad=[5,5,2])
+function find_head(centroids, imsize; tf=[10,10,30], max_d=[30,50,50], hd_threshold::Integer=100, 
+        vc_threshold::Integer=300, num_centroids_threshold::Integer=90, edge_threshold::Integer=5)
     len = length(max_d)
     threshold = [Int64(ceil(length(centroids)/tf[i])) for i in 1:len]
     # Create three local convex hulls with different thresholds
@@ -177,13 +175,7 @@ function find_head(centroids, imsize; tf=[10,10,30,30], max_d=[30,50,50,100], hd
     if length(centroids) < num_centroids_threshold
         push!(q_flag, "NOT_ENOUGH_NEURONS")
     end
-    # angle to rotate for PC1 to be the x-axis
-    theta = atan(long_axis[4][2]/long_axis[4][1])
-    # compute cropping once we're in PC1 space
-    crop_x = (Int64(floor(minimum(distances[4]) + worm_centroid[4][1])) - crop_pad[1], Int64(ceil(maximum(distances[4]) + worm_centroid[4][1])) + crop_pad[2])
-    distances_short = map(x->sum(x.*short_axis[4]), deltas[4])
-    crop_y = (Int64(floor(minimum(distances_short) + worm_centroid[4][2])) - crop_pad[1], Int64(ceil(maximum(distances_short) + worm_centroid[4][2])) + crop_pad[2])
-    crop_z = (crop_z[1] - crop_pad[3], crop_z[2] + crop_pad[3])
     # Return head from third (most generous) hull, plus flags, plus cropping parameters
-    return (head[3], q_flag, crop_x, crop_y, crop_z, theta, worm_centroid[4])
+    return (head[3], q_flag)
 end
+

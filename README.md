@@ -9,14 +9,16 @@ The example code provided here assumes the `FlavellBase` and `ImageDataIO` packa
 
 ## Worm curvature similarity heuristic
 
-### Worm head location, and cropping
+### Worm head location
 
 In order to use this heuristic, it's necessary to determine the location of the worm's head.
-The algorithm that finds the worm's head location does this by effectively turning the worm into a blob and finding an extremum of that blob. It also proves to be useful to crop the images and delete non-worm regions to save on computation time in later steps of registration, so the algorithm also does that as well. Note that this algorithm only works on data where neuron centroids have already been computed (for example, by the `SegmentationTools.jl` package).
+The algorithm that finds the worm's head location does this by effectively turning the worm into a blob and finding an extremum of that blob. Note that this algorithm only works on data where neuron centroids have already been computed (for example, by the `SegmentationTools.jl` package).
 Example code:
 
 ```julia
-crop_rotate_images("/path/to/data", 1:100, "MHD_filtered", "MHD_filtered_cropped", "img_prefix", 2, "centroids", "centroids_cropped", "head_pos.txt", "crop_params.txt")
+centroids = read_centroids_roi("/path/to/centroids")
+img_size = size(read_img(MHD("/path/to/mhd")))
+find_head(centroids, img_size)
 ```
 
 ### Using the worm curvature heuristic
@@ -28,7 +30,8 @@ This heuristic requires data that has nuclear-localized fluorescent proteins in 
 Example code, if you are using this heuristic with `RegistrationGraph.jl`:
 
 ```julia
-heur = (rootpath, frame1, frame2) -> elastix_difficulty_wormcurve(rootpath, frame1, frame2, "MHD_filtered_cropped", "head_pos.txt", "img_prefix", 2; figure_save_path="worm_curves")
+curves = Dict()
+heur = (rootpath, frame1, frame2) -> elastix_difficulty_wormcurve(rootpath, frame1, frame2, "MHD_filtered_cropped", "head_pos.txt", "img_prefix", 2, curves; figure_save_path="worm_curves")
 ```
 
 ## HSN and nerve ring location heuristic

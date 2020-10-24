@@ -48,6 +48,8 @@ and that the head position of the worm is known in each frame.
 - `img_prefix::String`: image prefix not including the timestamp. It is assumed that each frame's filename
     will be, eg, `img_prefix_t0123_ch2.mhd` for frame 123 with channel=2.
 - `channel::Integer`: channel being used.
+- `curves`: dictionary of worm curves found so far. The method will attempt to find the worm's curvature in this dictionary,
+    and will compute and add it to the dictionary if not found.
 
 ## Other parameters (optional):
 - `figure_save_path::String`: Path to save figures of worm curvature. If left blank, figures will not be generated.
@@ -58,7 +60,7 @@ and that the head position of the worm is known in each frame.
 - `tailpt::Integer`: Second position from head (in index of curves) to be aligned. Default 7.
 """
 function elastix_difficulty_wormcurve(rootpath::String, frame1::Integer, frame2::Integer, mhd_path::String, head_path::String,
-        img_prefix::String, channel::Integer; figure_save_path::String="",
+        img_prefix::String, channel::Integer, curves; figure_save_path::String="",
         downscale::Integer=3, num_points::Integer=9, headpt::Integer=4, tailpt::Integer=7)
 
 
@@ -68,15 +70,36 @@ function elastix_difficulty_wormcurve(rootpath::String, frame1::Integer, frame2:
 
     head_pos = read_head_pos(joinpath(rootpath, head_path))
 
-    x1_c, y1_c = find_curve(img1, downscale, head_pos[frame1]./2^downscale, num_points)
-    x2_c, y2_c = find_curve(img1, downscale, head_pos[frame2]./2^downscale, num_points)
+    if frame1 in keys(curves)
+        x1_c, y1_c = curves[frame1]
+    else
+        x1_c, y1_c = find_curve(img1, downscale, head_pos[frame1]./2^downscale, num_points)
+    end
+
+    if frame2 in keys(curves)
+        x2_c, y2_c = curves[frame2]
+    else
+        x2_c, y2_c = find_curve(img2, downscale, head_pos[frame2]./2^downscale, num_points)
+    end
+
     if figure_save_path != ""
         create_dir(joinpath(rootpath, figure_save_path))
-        fig = heatmap(transpose(img1), fillcolor=:grays, aspect_ratio=1, flip=false, showaxis=false, legend=false)
-        scatter!(fig, x1_c.-1, y1_c.-1, color="red");
-        scatter!(fig, [x1_c[1].-1], [y1_c[1].-1], color="cyan", markersize=5);
-        savefig(fig, joinpath(rootpath, figure_save_path, "$(frame1).png"));
+        if !(frame1 in keys(curves))
+            fig = heatmap(transpose(img1), fillcolor=:grays, aspect_ratio=1, flip=false, showaxis=false, legend=false)
+            scatter!(fig, x1_c.-1, y1_c.-1, color="red");
+            scatter!(fig, [x1_c[1].-1], [y1_c[1].-1], color="cyan", markersize=5);
+            savefig(fig, joinpath(rootpath, figure_save_path, "$(frame1).png"));
+        end
+        if !(frame2 in keys(curves))
+            fig = heatmap(transpose(img2), fillcolor=:grays, aspect_ratio=1, flip=false, showaxis=false, legend=false)
+            scatter!(fig, x2_c.-1, y2_c.-1, color="red");
+            scatter!(fig, [x2_c[1].-1], [y2_c[1].-1], color="cyan", markersize=5);
+            savefig(fig, joinpath(rootpath, figure_save_path, "$(frame2).png"));
+        end
     end
+
+    curves[frame1] = (x1_c, y1_c)
+    curves[frame2] = (x2_c, y2_c)
 
     return curve_distance(x1_c, y1_c, x2_c, y2_c, headpt=headpt, tailpt=tailpt)
 end
