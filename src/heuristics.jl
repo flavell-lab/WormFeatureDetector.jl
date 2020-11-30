@@ -97,7 +97,7 @@ end
 
 # TODO: document
 function elastix_difficulty_wormcurve!(dict_curve::Dict, param::Dict, param_path::Dict, t1::Int, t2::Int, ch::Int,
-        path_dir_mhd::String, f_basename::Function; path_fig::Union{Nothing,String}=nothing)
+        path_dir_mhd::String, f_basename::Function; save_curve_fig=false)
     worm_curve_n_pts = param["worm_curve_n_pts"] 
     worm_curve_tail_idx = param["worm_curve_tail_idx"]
     worm_curve_head_idx = param["worm_curve_head_idx"]
@@ -110,8 +110,10 @@ function elastix_difficulty_wormcurve!(dict_curve::Dict, param::Dict, param_path
     img2 = Float64.(read_img(MHD(path_mhd_t2)))
     
     head_pos = read_head_pos(param_path["path_head_pos"])
-
+    
+    path_dir_worm_curve = save_curve_fig ? param_path["path_dir_worm_curve"] : nothing
+    
     elastix_difficulty_wormcurve!(dict_curve, img1, img2, t1, t2, head_pos,
         downscale=worm_curve_downscale, num_points=worm_curve_n_pts, headpt=param["worm_curve_head_idx"],
-        tailpt=param["worm_curve_tail_idx"], path_fig=path_fig)
+        tailpt=param["worm_curve_tail_idx"], path_fig=path_dir_worm_curve)
 end
