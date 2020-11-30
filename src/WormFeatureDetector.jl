@@ -16,6 +16,6 @@ export
     in_conv_hull,
     curve_distance,
     elastix_difficulty_hsn_nr,
-    elastix_difficulty_wormcurve,
+    elastix_difficulty_wormcurve!,
     centroids_to_img
 end # module
