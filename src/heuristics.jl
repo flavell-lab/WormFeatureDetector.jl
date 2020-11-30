@@ -49,7 +49,7 @@ and that the head position of the worm is known in each frame.
 - `head_pos::Dict`: head position dictionaru
 
 ## Other parameters (optional):
-- `path_fig::Union{Nothing,String}`: Path to save figures of worm curvature. If `nothing`, figures will not be generated.
+- `path_dir_fig::Union{Nothing,String}`: Path to save figures of worm curvature. If `nothing`, figures will not be generated.
 - `downscale::Integer`: log2(factor) by which to downscale the image before processing. Default 3 (ie: downscale by a factor of 8)
 - `num_points::Integer`: number of points (not including head) in generated curve. Default 9.
 - `headpt::Integer`: First position from head (in index of curves) to be aligned. Default 4.
@@ -57,7 +57,7 @@ and that the head position of the worm is known in each frame.
 """
 function elastix_difficulty_wormcurve!(dict_curve::Dict, img1::Array{<:AbstractFloat,3}, img2::Array{<:AbstractFloat,3},
         t1::Int, t2::Int, head_pos::Dict; downscale::Int=3, num_points::Int=9, headpt::Int=4, tailpt::Int=7,
-        path_fig::Union{Nothing,String}=nothing)
+        path_dir_fig::Union{Nothing,String}=nothing)
 
     img1 = maxprj(img1, dims=3)
     img2 = maxprj(img2, dims=3)
@@ -115,5 +115,5 @@ function elastix_difficulty_wormcurve!(dict_curve::Dict, param::Dict, param_path
     
     elastix_difficulty_wormcurve!(dict_curve, img1, img2, t1, t2, head_pos,
         downscale=worm_curve_downscale, num_points=worm_curve_n_pts, headpt=param["worm_curve_head_idx"],
-        tailpt=param["worm_curve_tail_idx"], path_fig=path_dir_worm_curve)
+        tailpt=param["worm_curve_tail_idx"], path_dir_fig=path_dir_worm_curve)
 end
