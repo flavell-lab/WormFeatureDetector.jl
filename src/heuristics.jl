@@ -72,7 +72,7 @@ function elastix_difficulty_wormcurve!(curves::Dict, img1::Array{<:AbstractFloat
     if haskey(curves, t2)
         x2_c, y2_c = curves[t2]
     else
-        x1_c, y1_c = find_curve(img2, downscale, head_pos[t2]./2^downscale, num_points)
+        x2_c, y2_c = find_curve(img2, downscale, head_pos[t2]./2^downscale, num_points)
         curves[t2] = (x2_c, y2_c)
     end
 
