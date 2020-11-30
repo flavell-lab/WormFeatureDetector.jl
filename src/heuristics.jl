@@ -40,7 +40,7 @@ Requires that the data be filtered in some way (eg: total-variation filtering),
 and that the head position of the worm is known in each frame.
 
 # Arguments:
-- `curves::Dict`: dictionary of worm curves found so far. The method will attempt to find the worm's curvature in this dictionary,
+- `dict_curve::Dict`: dictionary of worm curves found so far. The method will attempt to find the worm's curvature in this dictionary,
     and will compute and add it to the dictionary if not found.
 - `img1::Array{<:AbstractFloat,3}`: image 1 array (volume)
 - `img2::Array{<:AbstractFloat,3}`: image 2 array (volume)
@@ -55,36 +55,36 @@ and that the head position of the worm is known in each frame.
 - `headpt::Integer`: First position from head (in index of curves) to be aligned. Default 4.
 - `tailpt::Integer`: Second position from head (in index of curves) to be aligned. Default 7.
 """
-function elastix_difficulty_wormcurve!(curves::Dict, img1::Array{<:AbstractFloat,3}, img2::Array{<:AbstractFloat,3},
+function elastix_difficulty_wormcurve!(dict_curve::Dict, img1::Array{<:AbstractFloat,3}, img2::Array{<:AbstractFloat,3},
         t1::Int, t2::Int, head_pos::Dict; downscale::Int=3, num_points::Int=9, headpt::Int=4, tailpt::Int=7,
         path_fig::Union{Nothing,String}=nothing)
 
     img1 = maxprj(img1, dims=3)
     img2 = maxprj(img2, dims=3)
 
-    if haskey(curves, t1)
-        x1_c, y1_c = curves[t1]
+    if haskey(dict_curve, t1)
+        x1_c, y1_c = dict_curve[t1]
     else
         x1_c, y1_c = find_curve(img1, downscale, head_pos[t1]./2^downscale, num_points)
-        curves[t1] = (x1_c, y1_c)
+        dict_curve[t1] = (x1_c, y1_c)
     end
     
-    if haskey(curves, t2)
-        x2_c, y2_c = curves[t2]
+    if haskey(dict_curve, t2)
+        x2_c, y2_c = dict_curve[t2]
     else
         x2_c, y2_c = find_curve(img2, downscale, head_pos[t2]./2^downscale, num_points)
-        curves[t2] = (x2_c, y2_c)
+        dict_curve[t2] = (x2_c, y2_c)
     end
 
     if !isnothing(path_dir_fig)
         create_dir(path_dir_fig)
-        if !haskey(curves, t1)
+        if !haskey(dict_curve, t1)
             fig = heatmap(transpose(img1), fillcolor=:grays, aspect_ratio=1, flip=false, showaxis=false, legend=false)
             scatter!(fig, x1_c.-1, y1_c.-1, color="red");
             scatter!(fig, [x1_c[1].-1], [y1_c[1].-1], color="cyan", markersize=5);
             savefig(fig, joinpath(path_dir_fig, "$(t1).png"));
         end
-        if !haskey(curves, t2)
+        if !haskey(dict_curve, t2)
             fig = heatmap(transpose(img2), fillcolor=:grays, aspect_ratio=1, flip=false, showaxis=false, legend=false)
             scatter!(fig, x2_c.-1, y2_c.-1, color="red");
             scatter!(fig, [x2_c[1].-1], [y2_c[1].-1], color="cyan", markersize=5);
@@ -96,7 +96,7 @@ function elastix_difficulty_wormcurve!(curves::Dict, img1::Array{<:AbstractFloat
 end
 
 # TODO: document
-function elastix_difficulty_wormcurve!(curves::Dict, param::Dict, param_path::Dict, t1::Int, t2::Int, ch::Int,
+function elastix_difficulty_wormcurve!(dict_curve::Dict, param::Dict, param_path::Dict, t1::Int, t2::Int, ch::Int,
         path_dir_mhd::String, f_basename::Function; path_fig::Union{Nothing,String}=nothing)
     worm_curve_n_pts = param["worm_curve_n_pts"] 
     worm_curve_tail_idx = param["worm_curve_tail_idx"]
@@ -111,7 +111,7 @@ function elastix_difficulty_wormcurve!(curves::Dict, param::Dict, param_path::Di
     
     head_pos = read_head_pos(param_path["path_head_pos"])
 
-    elastix_difficulty_wormcurve!(curves, img1, img2, t1, t2, head_pos,
+    elastix_difficulty_wormcurve!(dict_curve, img1, img2, t1, t2, head_pos,
         downscale=worm_curve_downscale, num_points=worm_curve_n_pts, headpt=param["worm_curve_head_idx"],
         tailpt=param["worm_curve_tail_idx"], path_fig=path_fig)
 end
