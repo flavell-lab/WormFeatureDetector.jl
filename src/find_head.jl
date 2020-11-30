@@ -179,3 +179,44 @@ function find_head(centroids, imsize; tf=[10,10,30], max_d=[30,50,50], hd_thresh
     return (head[3], q_flag)
 end
 
+# TODO: document
+function find_head(param::Dict, param_path::Dict, t_range, f_basename::Function)
+    path_head_pos = param_path["path_head_pos"]
+    path_dir_mhd = param_path["path_dir_mhd"]
+    path_dir_centroid = param_path["path_dir_centroid"]
+    
+    head_threshold = param["head_threshold"]
+    head_max_distance = param["head_max_distance"]
+    head_err_threshold = param["head_err_threshold"]
+    head_vc_err_threshold = param["head_vc_err_threshold"] 
+    head_edge_err_threshold = param["head_edge_err_threshold"]
+
+    dict_qc_flag = Dict{Int,Any}()
+    dict_head_pos = Dict{Int,Any}()
+    dict_error = Dict{Int,Exception}()
+    
+    @showprogress for t = t_range
+        try
+            centroids = read_centroids_roi(joinpath(path_dir_centroid, "$(t).txt"))
+            path_mhd = joinpath(path_dir_mhd, f_basename(t, ch_marker) * ".mhd")
+            img = read_img(MHD(path_mhd))
+            head_pos, qc_flag = find_head(centroids, size(img), tf=head_threshold,
+                max_d=head_max_distance, hd_threshold=head_err_threshold,
+                vc_threshold=head_vc_err_threshold, edge_threshold=head_edge_err_threshold)
+            
+            dict_qc_flag[t] = qc_flag
+            dict_head_pos[t] = head_pos
+        catch e_
+            dict_error[t] = e_
+        end
+    end
+        
+    str_head_pos = ""
+    for t = sort(collect(keys(dict_head_pos)))
+        head_pos = dict_head_pos[t]
+        str_head_pos *= "$t    $(head_pos[1]) $(head_pos[2])\n"
+    end
+    write_txt(path_head_pos, str_head_pos[1:end-1])
+    
+    dict_qc_flag, dict_head_pos, dict_error
+end
