@@ -59,8 +59,8 @@ and that the head position of the worm is known in each frame.
 - `headpt::Integer`: First position from head (in index of curves) to be aligned. Default 4.
 - `tailpt::Integer`: Second position from head (in index of curves) to be aligned. Default 7.
 """
-function elastix_difficulty_wormcurve(rootpath::String, frame1::Integer, frame2::Integer, mhd_path::String, head_path::String,
-        img_prefix::String, channel::Integer, curves; figure_save_path::String="",
+function elastix_difficulty_wormcurve!(curves::Dict, rootpath::String, frame1::Integer, frame2::Integer, mhd_path::String, head_path::String,
+        img_prefix::String, channel::Integer; figure_save_path::String="",
         downscale::Integer=3, num_points::Integer=9, headpt::Integer=4, tailpt::Integer=7)
 
 
