@@ -198,7 +198,7 @@ function find_head(param::Dict, param_path::Dict, t_range, f_basename::Function)
     @showprogress for t = t_range
         try
             centroids = read_centroids_roi(joinpath(path_dir_centroid, "$(t).txt"))
-            path_mhd = joinpath(path_dir_mhd, f_basename(t, ch_marker) * ".mhd")
+            path_mhd = joinpath(path_dir_mhd, f_basename(t, param["ch_marker"]) * ".mhd")
             img = read_img(MHD(path_mhd))
             head_pos, qc_flag = find_head(centroids, size(img), tf=head_threshold,
                 max_d=head_max_distance, hd_threshold=head_err_threshold,
