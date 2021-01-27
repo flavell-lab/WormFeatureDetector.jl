@@ -56,7 +56,7 @@ and that the head position of the worm is known in each frame.
 - `tailpt::Integer`: Second position from head (in index of curves) to be aligned. Default 7.
 """
 function elastix_difficulty_wormcurve!(dict_curve::Dict, img1::Array{<:AbstractFloat,3}, img2::Array{<:AbstractFloat,3},
-        t1::Int, t2::Int, head_pos::Dict; downscale::Int=3, num_points::Int=9, headpt::Int=4, tailpt::Int=7,
+        t1::Int, t2::Int, head_pos_t1::Dict, head_pos_t2::Dict; downscale::Int=3, num_points::Int=9, headpt::Int=4, tailpt::Int=7,
         path_dir_fig::Union{Nothing,String}=nothing)
 
     img1 = maxprj(img1, dims=3)
@@ -65,14 +65,14 @@ function elastix_difficulty_wormcurve!(dict_curve::Dict, img1::Array{<:AbstractF
     if haskey(dict_curve, t1)
         x1_c, y1_c = dict_curve[t1]
     else
-        x1_c, y1_c = find_curve(img1, downscale, head_pos[t1]./2^downscale, num_points)
+        x1_c, y1_c = find_curve(img1, downscale, head_pos_t1[t1]./2^downscale, num_points)
         dict_curve[t1] = (x1_c, y1_c)
     end
     
     if haskey(dict_curve, t2)
         x2_c, y2_c = dict_curve[t2]
     else
-        x2_c, y2_c = find_curve(img2, downscale, head_pos[t2]./2^downscale, num_points)
+        x2_c, y2_c = find_curve(img2, downscale, head_pos_t2[t2]./2^downscale, num_points)
         dict_curve[t2] = (x2_c, y2_c)
     end
 
@@ -96,24 +96,32 @@ function elastix_difficulty_wormcurve!(dict_curve::Dict, img1::Array{<:AbstractF
 end
 
 # TODO: document
-function elastix_difficulty_wormcurve!(dict_curve::Dict, param::Dict, param_path::Dict, t1::Int, t2::Int, ch::Int,
-        path_dir_mhd::String, f_basename::Function; save_curve_fig=false)
+function elastix_difficulty_wormcurve!(dict_curve::Dict, param::Dict, param_path_fixed::Dict, param_path_moving::Dict, t1::Int, t2::Int, ch::Int;
+        save_curve_fig=false, max_fixed_t::Union{Integer,Nothing}=nothing)
+
     worm_curve_n_pts = param["worm_curve_n_pts"] 
     worm_curve_tail_idx = param["worm_curve_tail_idx"]
     worm_curve_head_idx = param["worm_curve_head_idx"]
     worm_curve_downscale = param["worm_curve_downscale"]
     
-    path_mhd_t1 = joinpath(path_dir_mhd, f_basename(t1, ch) * ".mhd")
-    path_mhd_t2 = joinpath(path_dir_mhd, f_basename(t2, ch) * ".mhd")
+    if !isnothing(max_fixed_t)
+        if t1 > max_fixed_t || t2 <= max_fixed_t
+            return Inf
+        end
+    end
+
+    path_mhd_t1 = joinpath(param_path_fixed["path_dir_mhd_filt"], param_path_fixed["get_basename"](t1, ch) * ".mhd")
+    path_mhd_t2 = joinpath(param_path_fixed["path_dir_mhd_filt"], param_path_moving["get_basename"](t2, ch) * ".mhd")
 
     img1 = Float64.(read_img(MHD(path_mhd_t1)))
     img2 = Float64.(read_img(MHD(path_mhd_t2)))
     
-    head_pos = read_head_pos(param_path["path_head_pos"])
+    head_pos_t1 = read_head_pos(param_path_fixed["path_head_pos"])
+    head_pos_t2 = read_head_pos(param_path_moving["path_head_pos"])  
+
+    path_dir_worm_curve = save_curve_fig ? param_path_fixed["path_dir_worm_curve"] : nothing
     
-    path_dir_worm_curve = save_curve_fig ? param_path["path_dir_worm_curve"] : nothing
-    
-    elastix_difficulty_wormcurve!(dict_curve, img1, img2, t1, t2, head_pos,
+    elastix_difficulty_wormcurve!(dict_curve, img1, img2, t1, t2, head_pos_t1, head_pos_t2,
         downscale=worm_curve_downscale, num_points=worm_curve_n_pts, headpt=param["worm_curve_head_idx"],
         tailpt=param["worm_curve_tail_idx"], path_dir_fig=path_dir_worm_curve)
 end
