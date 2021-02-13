@@ -104,20 +104,31 @@ function elastix_difficulty_wormcurve!(dict_curve::Dict, param::Dict, param_path
     worm_curve_head_idx = param["worm_curve_head_idx"]
     worm_curve_downscale = param["worm_curve_downscale"]
     
-    if !isnothing(max_fixed_t)
+    if isnothing(max_fixed_t)
+        max_fixed_t = 0
+    else
         if t1 > max_fixed_t || t2 <= max_fixed_t
             return Inf
         end
     end
 
     path_mhd_t1 = joinpath(param_path_fixed["path_dir_mhd_filt"], param_path_fixed["get_basename"](t1, ch) * ".mhd")
-    path_mhd_t2 = joinpath(param_path_fixed["path_dir_mhd_filt"], param_path_moving["get_basename"](t2, ch) * ".mhd")
+    path_mhd_t2 = joinpath(param_path_moving["path_dir_mhd_filt"], param_path_moving["get_basename"](t2 - max_fixed_t, ch) * ".mhd")
 
     img1 = Float64.(read_img(MHD(path_mhd_t1)))
     img2 = Float64.(read_img(MHD(path_mhd_t2)))
     
     head_pos_t1 = read_head_pos(param_path_fixed["path_head_pos"])
-    head_pos_t2 = read_head_pos(param_path_moving["path_head_pos"])  
+    head_pos_t2 = read_head_pos(param_path_moving["path_head_pos"])
+
+    if !isnothing(max_fixed_t)
+        head_pos_t2_shifted = Dict()
+        for t in keys(head_pos_t2)
+            head_pos_t2_shifted[t + max_fixed_t] = head_pos_t2[t]
+        end
+        head_pos_t2 = head_pos_t2_shifted
+    end
+
 
     path_dir_worm_curve = save_curve_fig ? param_path_fixed["path_dir_worm_curve"] : nothing
     
