@@ -95,8 +95,8 @@ The third convex hull is used to find the tip of the worm's head.
 - `imsize`: the image size
 
 ## Optional keyword arguments
-- `tf` (default [10,10,30,30]): threshold for required neuron density for convex hull `i` is (number of centroids) / `tf[i]`
-- `max_d` (default [30,50,50,100]): the maximum distance for a neuron to be counted as part of convex hull `i` is `max_d[i]`
+- `tf` (default [10,10,30]): threshold for required neuron density for convex hull `i` is (number of centroids) / `tf[i]`
+- `max_d` (default [30,50,50]): the maximum distance for a neuron to be counted as part of convex hull `i` is `max_d[i]`
 - `hd_threshold::Integer` (default 100): if convex hulls 2 and 3 give head locations farther apart than this many pixels, set error flag.
 - `vc_threshold::Integer` (default 300): if convex hulls 2 and 3 give tail locations farther apart than this many pixels, set error flag.
 - `num_centroids_threshold::Integer` (default 90): if there are fewer than this many centroids, set error flag.
@@ -198,7 +198,7 @@ function find_head(param::Dict, param_path::Dict, t_range, f_basename::Function)
     @showprogress for t = t_range
         try
             centroids = read_centroids_roi(joinpath(path_dir_centroid, "$(t).txt"))
-            path_mhd = joinpath(path_dir_mhd, f_basename(t, ch_marker) * ".mhd")
+            path_mhd = joinpath(path_dir_mhd, f_basename(t, param["ch_marker"]) * ".mhd")
             img = read_img(MHD(path_mhd))
             head_pos, qc_flag = find_head(centroids, size(img), tf=head_threshold,
                 max_d=head_max_distance, hd_threshold=head_err_threshold,
