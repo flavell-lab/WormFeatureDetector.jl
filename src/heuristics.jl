@@ -66,14 +66,12 @@ function elastix_difficulty_wormcurve!(dict_curve::Dict, img1::Array{<:AbstractF
         x1_c, y1_c = dict_curve[t1]
     else
         x1_c, y1_c = find_curve(img1, downscale, head_pos_t1[t1]./2^downscale, num_points)
-        dict_curve[t1] = (x1_c, y1_c)
     end
     
     if haskey(dict_curve, t2)
         x2_c, y2_c = dict_curve[t2]
     else
         x2_c, y2_c = find_curve(img2, downscale, head_pos_t2[t2]./2^downscale, num_points)
-        dict_curve[t2] = (x2_c, y2_c)
     end
 
     if !isnothing(path_dir_fig)
@@ -91,6 +89,9 @@ function elastix_difficulty_wormcurve!(dict_curve::Dict, img1::Array{<:AbstractF
             savefig(fig, joinpath(path_dir_fig, "$(t2).png"));
         end
     end
+
+    dict_curve[t1] = (x1_c, y1_c)
+    dict_curve[t2] = (x2_c, y2_c)
 
     return curve_distance(x1_c, y1_c, x2_c, y2_c, headpt=headpt, tailpt=tailpt)
 end
