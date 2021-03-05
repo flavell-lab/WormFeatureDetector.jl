@@ -182,7 +182,7 @@ end
 # TODO: document
 function find_head(param::Dict, param_path::Dict, t_range, f_basename::Function)
     path_head_pos = param_path["path_head_pos"]
-    path_dir_mhd = param_path["path_dir_mhd"]
+    path_dir_mhd = param_path["path_dir_mhd_crop"]
     path_dir_centroid = param_path["path_dir_centroid"]
     
     head_threshold = param["head_threshold"]
