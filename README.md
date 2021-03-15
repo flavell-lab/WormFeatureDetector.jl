@@ -2,6 +2,8 @@
 
 A collection of heuristics for locating various features of the worm.
 
+The API is available [here](https://flavell-lab.github.io/WormFeatureDetector.jl/dev/).
+
 ## Prerequisites
 
 This package requires you to have previously installed the `FlavellBase.jl`, `ImageDataIO.jl`, and `MHDIO.jl` packages from the `flavell-lab` github repository.

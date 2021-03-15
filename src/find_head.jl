@@ -38,7 +38,7 @@ function in_conv_hull(point, centroids, max_d::Real)
 end
 
 """
-Removes neurons from `centroids` if there are less than `threshold::Integer` neurons in a radius `max_d::Real` around them.
+Removes neurons from `centroids` in a radius `max_d::Real` around them if there are less than `threshold::Integer` neurons.
 """
 function remove_outlier_neurons(centroids, max_d::Real, threshold::Integer)
     return filter(x->length(filter(y->sum((y.-x).*(y.-x)) < max_d^2, centroids)) >= threshold, centroids)
@@ -82,9 +82,8 @@ function is_in_focus(centroids, imsize; max_d::Real=50, threshold::Integer=2, z_
     return (true, (min_z, max_z))
 end
 
-# TODO: Safe padding (currently, padding could possibly result in indices outside array)
 """
-Finds the tip of the nose of the worm in each frame, and warns of bad frames.
+Finds the tip of the nose of the worm in each time point, and warns of bad time points.
 Uses a series of blob-approximations of the worm with different sensitivities, by using local convex hull.
 The convex hulls should be set up in increasing order (so the last convex hull is the most generous).
 The difference between the first two convex hulls is used to determine the direction of the worm's head.
@@ -179,7 +178,28 @@ function find_head(centroids, imsize; tf=[10,10,30], max_d=[30,50,50], hd_thresh
     return (head[3], q_flag)
 end
 
-# TODO: document
+"""
+Finds the tip of the nose of the worm in each time point, and warns of bad time points.
+Uses a series of blob-approximations of the worm with different sensitivities, by using local convex hull.
+The convex hulls should be set up in increasing order (so the last convex hull is the most generous).
+The difference between the first two convex hulls is used to determine the direction of the worm's head.
+The third convex hull is used to find the tip of the worm's head.
+
+# Arguments:
+
+- `param_path::Dict`: Dictionary of paths including the keys:
+    - `path_head_pos`: Path to head position output file
+    - `path_dir_mhd_crop`: Path to MHD input files
+    - `path_dir_centroid`: Path to centroid input files
+- `param::Dict`: Dictionary of parameter settings including the keys:
+    - `head_threshold`: threshold for required neuron density for convex hull `i` is (number of centroids) / `param["head_threshold"][i]`
+    - `head_max_distance`: the maximum distance for a neuron to be counted as part of convex hull `i` is `max_d[i]`
+    - `head_err_threshold`: if convex hulls 2 and 3 give head locations farther apart than this many pixels, set error flag.
+    - `head_vc_err_threshold`: if convex hulls 2 and 3 give tail locations farther apart than this many pixels, set error flag.
+    - `head_edge_err_threshold`: if the boundary of the worm is closer than this to the edge of the frame, set error flag.
+- `t_range`: The time points to compute head location
+- `f_basename::Function`: Function that takes as input a time point and a channel and gives the base name of the corresponding MHD file.
+"""
 function find_head(param::Dict, param_path::Dict, t_range, f_basename::Function)
     path_head_pos = param_path["path_head_pos"]
     path_dir_mhd = param_path["path_dir_mhd_crop"]
