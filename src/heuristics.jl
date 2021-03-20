@@ -35,18 +35,19 @@ function elastix_difficulty_hsn_nr(rootpath::String, frame1::Integer, frame2::In
 end
 
 """
-Computes registration difficulty between two frames based on the worm curvature heuristic.
+Computes registration difficulty between two time points based on the worm curvature heuristic.
 Requires that the data be filtered in some way (eg: total-variation filtering),
-and that the head position of the worm is known in each frame.
+and that the head position of the worm is known in each time point.
 
 # Arguments:
 - `dict_curve::Dict`: dictionary of worm curves found so far. The method will attempt to find the worm's curvature in this dictionary,
     and will compute and add it to the dictionary if not found.
 - `img1::Array{<:AbstractFloat,3}`: image 1 array (volume)
 - `img2::Array{<:AbstractFloat,3}`: image 2 array (volume)
-- `t1::Int`: index of frame 1
-- `t2::Int`: index of frame 2
-- `head_pos::Dict`: head position dictionaru
+- `t1::Int`: time point 1
+- `t2::Int`: time point 2
+- `head_pos_t1::Dict`: head position dictionary at time point 1
+- `head_pos_t2::Dict`: head position dictionary at time point 2
 
 ## Other parameters (optional):
 - `path_dir_fig::Union{Nothing,String}`: Path to save figures of worm curvature. If `nothing`, figures will not be generated.
@@ -66,14 +67,12 @@ function elastix_difficulty_wormcurve!(dict_curve::Dict, img1::Array{<:AbstractF
         x1_c, y1_c = dict_curve[t1]
     else
         x1_c, y1_c = find_curve(img1, downscale, head_pos_t1[t1]./2^downscale, num_points)
-        dict_curve[t1] = (x1_c, y1_c)
     end
     
     if haskey(dict_curve, t2)
         x2_c, y2_c = dict_curve[t2]
     else
         x2_c, y2_c = find_curve(img2, downscale, head_pos_t2[t2]./2^downscale, num_points)
-        dict_curve[t2] = (x2_c, y2_c)
     end
 
     if !isnothing(path_dir_fig)
@@ -92,12 +91,40 @@ function elastix_difficulty_wormcurve!(dict_curve::Dict, img1::Array{<:AbstractF
         end
     end
 
+    dict_curve[t1] = (x1_c, y1_c)
+    dict_curve[t2] = (x2_c, y2_c)
+
     return curve_distance(x1_c, y1_c, x2_c, y2_c, headpt=headpt, tailpt=tailpt)
 end
 
-# TODO: document
+"""
+Computes registration difficulty between two time points based on the worm curvature heuristic.
+Requires that the data be filtered in some way (eg: total-variation filtering),
+and that the head position of the worm is known in each time point.
+
+# Arguments
+- `dict_curve::Dict`: Dictionary of worm curves found so far. The method will attempt to find the worm's curvature in this dictionary,
+and will compute and add it to the dictionary if not found.
+- `param::Dict`: Dictionary of parameter settings, including:
+    - `worm_curve_n_pts`: number of points (not including head) in generated curve.
+    - `worm_curve_head_idx`: First position from head (in index of curves) to be aligned.
+    - `worm_curve_tail_idx`: Second position from head (in index of curves) to be aligned.
+    - `worm_curve_downscale`: log2(factor) by which to downscale the image before processing.
+- `param_path_fixed::Dict`: Dictionary of paths for the fixed (`t1`) time point, including:
+    - `path_dir_mhd_filt`: Path to filtered cropped MHD files
+    - `path_head_pos`: Path to head position
+    - `path_dir_worm_curve`: Path to save worm curve images
+    - `get_basename`: Function that takes as input a time point and a channel and gives the base name of the corresponding MHD file. 
+- `param_path_moving::Dict`: Dictionary of paths for the moving (`t2`) time point, including the same keys as for the fixed dictionary.
+- `t1::Int`: Fixed time point
+- `t2::Int`: Moving time point
+- `ch::Int`: Channel
+- `save_curve_fig::Bool` (optional, default `false`): whether to save worm curve images
+- `max_fixed_t::Union{Integer,Nothing}` (optional, default `nothing`): If using two different data sets, the maximum time point in the fixed dataset.
+    Moving dataset time points will be incremented by this amount.
+"""
 function elastix_difficulty_wormcurve!(dict_curve::Dict, param::Dict, param_path_fixed::Dict, param_path_moving::Dict, t1::Int, t2::Int, ch::Int;
-        save_curve_fig=false, max_fixed_t::Union{Integer,Nothing}=nothing)
+        save_curve_fig::Bool=false, max_fixed_t::Union{Integer,Nothing}=nothing)
 
     worm_curve_n_pts = param["worm_curve_n_pts"] 
     worm_curve_tail_idx = param["worm_curve_tail_idx"]
