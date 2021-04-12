@@ -201,10 +201,10 @@ The third convex hull is used to find the tip of the worm's head.
     - `head_edge_err_threshold`: if the boundary of the worm is closer than this to the edge of the frame, set error flag.
 - `t_range`: The time points to compute head location
 - `f_basename::Function`: Function that takes as input a time point and a channel and gives the base name of the corresponding MHD file.
-- `manual_override`: In case the algorithm finds the worm's ventral cord instead of its head, set this variable to a list of all time points where
+- `manual_override` (optional): In case the algorithm finds the worm's ventral cord instead of its head, set this variable to a list of all time points where
     the algorithm was wrong.
 """
-function find_head(param::Dict, param_path::Dict, t_range, f_basename::Function, manual_override=[])
+function find_head(param::Dict, param_path::Dict, t_range, f_basename::Function; manual_override=[])
     path_head_pos = param_path["path_head_pos"]
     path_dir_mhd = param_path["path_dir_mhd_crop"]
     path_dir_centroid = param_path["path_dir_centroid"]
