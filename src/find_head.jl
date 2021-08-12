@@ -100,6 +100,8 @@ The third convex hull is used to find the tip of the worm's head.
 - `vc_threshold::Integer` (default 300): if convex hulls 2 and 3 give tail locations farther apart than this many pixels, set error flag.
 - `num_centroids_threshold::Integer` (default 90): if there are fewer than this many centroids, set error flag.
 - `edge_threshold::Integer` (default 5): if the boundary of the worm is closer than this to the edge of the frame, set error flag.
+- `manual_override`: In case the algorithm finds the worm's ventral cord instead of its head, set this variable to a list of all time points where
+the algorithm was wrong.
 
 # Outputs a tuple `(head_pos, q_flag, crop_x, crop_y, crop_z, theta, centroid)`
 - `head_pos`: position of the worm's head.
@@ -109,7 +111,7 @@ The third convex hull is used to find the tip of the worm's head.
 - `centroid`: centroid of the worm
 """
 function find_head(centroids, imsize; tf=[10,10,30], max_d=[30,50,50], hd_threshold::Integer=100, 
-        vc_threshold::Integer=300, num_centroids_threshold::Integer=90, edge_threshold::Integer=5)
+        vc_threshold::Integer=300, num_centroids_threshold::Integer=90, edge_threshold::Integer=5, manual_override=false)
     len = length(max_d)
     threshold = [Int64(ceil(length(centroids)/tf[i])) for i in 1:len]
     # Create three local convex hulls with different thresholds
@@ -141,7 +143,7 @@ function find_head(centroids, imsize; tf=[10,10,30], max_d=[30,50,50], hd_thresh
     
     q_flag = []
     # Find head according to all three convex hulls, using sign computed above, but always using the second PCA
-    if sign_of_head > 0
+    if sign_of_head * (!manual_override) > 0
         head = [lch_nonzero[i][distances_order[i][end]] for i in 1:len]
         vc = [lch_nonzero[i][distances_order[i][1]] for i in 1:len]
     else
@@ -199,8 +201,10 @@ The third convex hull is used to find the tip of the worm's head.
     - `head_edge_err_threshold`: if the boundary of the worm is closer than this to the edge of the frame, set error flag.
 - `t_range`: The time points to compute head location
 - `f_basename::Function`: Function that takes as input a time point and a channel and gives the base name of the corresponding MHD file.
+- `manual_override` (optional): In case the algorithm finds the worm's ventral cord instead of its head, set this variable to a list of all time points where
+    the algorithm was wrong.
 """
-function find_head(param::Dict, param_path::Dict, t_range, f_basename::Function)
+function find_head(param::Dict, param_path::Dict, t_range, f_basename::Function; manual_override=[])
     path_head_pos = param_path["path_head_pos"]
     path_dir_mhd = param_path["path_dir_mhd_crop"]
     path_dir_centroid = param_path["path_dir_centroid"]
@@ -222,7 +226,8 @@ function find_head(param::Dict, param_path::Dict, t_range, f_basename::Function)
             img = read_img(MHD(path_mhd))
             head_pos, qc_flag = find_head(centroids, size(img), tf=head_threshold,
                 max_d=head_max_distance, hd_threshold=head_err_threshold,
-                vc_threshold=head_vc_err_threshold, edge_threshold=head_edge_err_threshold)
+                vc_threshold=head_vc_err_threshold, edge_threshold=head_edge_err_threshold,
+                manual_override=(t in manual_override))
             
             dict_qc_flag[t] = qc_flag
             dict_head_pos[t] = head_pos
