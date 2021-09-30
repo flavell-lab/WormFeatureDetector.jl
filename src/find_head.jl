@@ -181,6 +181,56 @@ function find_head(centroids, imsize; tf=[10,10,30], max_d=[30,50,50], hd_thresh
 end
 
 """
+Finds the head using the head-detection UNet.
+Automatically crops the images to 1:322,1:210, downsamples them by 2x, and takes a maximum-intensity projection.
+
+# Arguments:
+- `param_path`: Dictionary containing the keys:
+    - `path_dir_mhd_shearcorrect`, a path to shear-corrected MHD files
+    - `get_basename`, a function that takes time and channel as inputs and outputs MHD filename
+- `param`: Dictionary containing the keys:
+    - `t_range`: Time points to compute head
+    - `head_threshold`: UNet detection threshold
+- `dict_param_crop_rot`: Dictionary of cropping parameters
+- `model`: UNet model
+- `img_size`: Raw image size.
+"""
+function find_head_unet(param_path, param, dict_param_crop_rot, model, img_size)
+    head_pos = Dict()
+    head_errs = Dict()
+    @showprogress for t in param["t_range"]
+        img_raw = UNet2D.standardize(Float32.(resample_img(maxprj(read_img(MHD(joinpath(param_path["path_dir_mhd_shearcorrect"], param_path["get_basename"](t,2)*".mhd"))),dims=3)[1:322,1:210], [2,2])))
+        img_pred = resample_img(eval_model(img_raw, model), [0.5, 0.5], dtype="weight")
+
+        img_pred_reshape = zeros(img_size)
+        for z=1:img_size[3]
+            img_pred_reshape[1:322,1:210,z] .= img_pred
+        end
+
+        crop_x, crop_y, crop_z = dict_param_crop_rot[t]["crop"]
+        θ = dict_param_crop_rot[t]["θ"]
+        worm_centroid = dict_param_crop_rot[t]["worm_centroid"]
+
+        img_pred_crop = maxprj(crop_rotate(img_pred_reshape, crop_x, crop_y, crop_z, θ, worm_centroid)[1], dims=3)
+        img_pred_thresh = instance_segmentation(img_pred_crop .> param["head_threshold"], min_neuron_size=0)
+        img_pred_thresh[img_pred_crop .<= param["head_threshold"]] .= 0
+
+        try
+            centroids = get_centroids(img_pred_thresh)
+            idx = 1
+            if length(centroids) > 1
+                idx = findmax([sum(img_pred_crop[img_pred_thresh .== i]) for i=1:length(centroids)])[2]
+            end
+
+            head_pos[t] = Int64.(collect(centroids[idx]))
+        catch e
+            head_errs[t] = e
+        end
+    end
+    return (head_pos, head_errs)
+end
+
+"""
 Finds the tip of the nose of the worm in each time point, and warns of bad time points.
 Uses a series of blob-approximations of the worm with different sensitivities, by using local convex hull.
 The convex hulls should be set up in increasing order (so the last convex hull is the most generous).
