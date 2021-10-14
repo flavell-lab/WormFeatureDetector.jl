@@ -6,7 +6,6 @@ using WormCurveFinder, MHDIO, Statistics, Plots, ProgressMeter, Images, ImageTra
 include("worm_feature_detector.jl")
 include("worm_curve_finder.jl")
 include("heuristics.jl")
-include("find_head.jl")
 
 export
     find_gut_granules,
