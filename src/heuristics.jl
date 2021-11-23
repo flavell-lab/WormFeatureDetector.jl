@@ -40,8 +40,8 @@ Requires that the data be filtered in some way (eg: total-variation filtering),
 and that the head position of the worm is known in each time point.
 
 # Arguments:
-- `dict_curve::Dict`: dictionary of worm curves found so far. The method will attempt to find the worm's curvature in this dictionary,
-    and will compute and add it to the dictionary if not found.
+- `curves::Array{<:Any,1}`: Array of worm curves found so far. The method will attempt to find the worm's curvature in this array,
+    and will compute and add it to the array if not found.
 - `img1::Array{<:AbstractFloat,3}`: image 1 array (volume)
 - `img2::Array{<:AbstractFloat,3}`: image 2 array (volume)
 - `t1::Int`: time point 1
@@ -108,8 +108,8 @@ Requires that the data be filtered in some way (eg: total-variation filtering),
 and that the head position of the worm is known in each time point.
 
 # Arguments
-- `dict_curve::Dict`: Dictionary of worm curves found so far. The method will attempt to find the worm's curvature in this dictionary,
-and will compute and add it to the dictionary if not found.
+- `curves::Dict`: Array of worm curves found so far. The method will attempt to find the worm's curvature in this array,
+and will compute and add it to the array if not found.
 - `param::Dict`: Dictionary of parameter settings, including:
     - `worm_curve_n_pts`: number of points (not including head) in generated curve.
     - `worm_curve_head_idx`: First position from head (in index of curves) to be aligned.
@@ -128,7 +128,7 @@ and will compute and add it to the dictionary if not found.
 - `max_fixed_t::Union{Integer,Nothing}` (optional, default `nothing`): If using two different data sets, the maximum time point in the fixed dataset.
     Moving dataset time points will be incremented by this amount.
 """
-function elastix_difficulty_wormcurve!(dict_curve::Dict, param::Dict, param_path_fixed::Dict, param_path_moving::Dict, t1::Int, t2::Int, ch::Int;
+function elastix_difficulty_wormcurve!(curves::Array{<:Any,1}, param::Dict, param_path_fixed::Dict, param_path_moving::Dict, t1::Int, t2::Int, ch::Int;
         save_curve_fig::Bool=false, max_fixed_t::Union{Integer,Nothing}=nothing)
 
     worm_curve_n_pts = param["worm_curve_n_pts"] 
@@ -164,7 +164,7 @@ function elastix_difficulty_wormcurve!(dict_curve::Dict, param::Dict, param_path
 
     path_dir_worm_curve = save_curve_fig ? param_path_fixed["path_dir_worm_curve"] : nothing
     
-    elastix_difficulty_wormcurve!(dict_curve, img1, img2, t1, t2, head_pos_t1, head_pos_t2,
+    elastix_difficulty_wormcurve!(curves, img1, img2, t1, t2, head_pos_t1, head_pos_t2,
         downscale=worm_curve_downscale, num_points=worm_curve_n_pts, headpt=param["worm_curve_head_idx"],
         tailpt=param["worm_curve_tail_idx"], path_dir_fig=path_dir_worm_curve)
 end
