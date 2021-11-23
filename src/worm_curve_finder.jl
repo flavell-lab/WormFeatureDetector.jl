@@ -49,7 +49,7 @@ using the heuristic that more worm-unbending is harder.
 function curve_distance(x1_c, y1_c, x2_c, y2_c;
         headpt::Integer=4, tailpt::Integer=7)
     x2, y2 = align(x1_c, y1_c, x2_c, y2_c; headpt=headpt, tailpt=tailpt)
-    delta = sum(map(sqrt,(x2 .- x1_c).^2 + (y2 .- y1_c).^2))
+    delta = sum(sqrt.((x2 .- x1_c).^2 + (y2 .- y1_c).^2))
     return delta
 end
 

@@ -56,34 +56,35 @@ and that the head position of the worm is known in each time point.
 - `headpt::Integer`: First position from head (in index of curves) to be aligned. Default 4.
 - `tailpt::Integer`: Second position from head (in index of curves) to be aligned. Default 7.
 """
-function elastix_difficulty_wormcurve!(dict_curve::Dict, img1::Array{<:AbstractFloat,3}, img2::Array{<:AbstractFloat,3},
+function elastix_difficulty_wormcurve!(curves::Array{<:Any,1}, img1::Array{<:AbstractFloat,3}, img2::Array{<:AbstractFloat,3},
         t1::Int, t2::Int, head_pos_t1::Dict, head_pos_t2::Dict; downscale::Int=3, num_points::Int=9, headpt::Int=4, tailpt::Int=7,
         path_dir_fig::Union{Nothing,String}=nothing)
 
     img1 = maxprj(img1, dims=3)
     img2 = maxprj(img2, dims=3)
 
-    if haskey(dict_curve, t1)
-        x1_c, y1_c = dict_curve[t1]
+    if isassigned(curves, t1)
+        x1_c, y1_c = curves[t1]
     else
         x1_c, y1_c = find_curve(img1, downscale, head_pos_t1[t1]./2^downscale, num_points)
     end
     
-    if haskey(dict_curve, t2)
-        x2_c, y2_c = dict_curve[t2]
+    if isassigned(curves, t2)
+        x2_c, y2_c = curves[t2]
     else
         x2_c, y2_c = find_curve(img2, downscale, head_pos_t2[t2]./2^downscale, num_points)
     end
 
     if !isnothing(path_dir_fig)
-        create_dir(path_dir_fig)
-        if !haskey(dict_curve, t1)
+        if !isassigned(curves, t1)
+            create_dir(path_dir_fig)
             fig = heatmap(transpose(img1), fillcolor=:grays, aspect_ratio=1, flip=false, showaxis=false, legend=false)
             scatter!(fig, x1_c.-1, y1_c.-1, color="red");
             scatter!(fig, [x1_c[1].-1], [y1_c[1].-1], color="cyan", markersize=5);
             savefig(fig, joinpath(path_dir_fig, "$(t1).png"));
         end
-        if !haskey(dict_curve, t2)
+        if !isassigned(curves, t2)
+            create_dir(path_dir_fig)
             fig = heatmap(transpose(img2), fillcolor=:grays, aspect_ratio=1, flip=false, showaxis=false, legend=false)
             scatter!(fig, x2_c.-1, y2_c.-1, color="red");
             scatter!(fig, [x2_c[1].-1], [y2_c[1].-1], color="cyan", markersize=5);
@@ -91,8 +92,12 @@ function elastix_difficulty_wormcurve!(dict_curve::Dict, img1::Array{<:AbstractF
         end
     end
 
-    dict_curve[t1] = (x1_c, y1_c)
-    dict_curve[t2] = (x2_c, y2_c)
+    if !isassigned(curves, t1)
+        curves[t1] = (x1_c, y1_c)
+    end
+    if !isassigned(curves, t2)
+        curves[t2] = (x2_c, y2_c)
+    end
 
     return curve_distance(x1_c, y1_c, x2_c, y2_c, headpt=headpt, tailpt=tailpt)
 end
