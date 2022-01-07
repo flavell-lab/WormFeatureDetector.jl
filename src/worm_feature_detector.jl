@@ -56,7 +56,7 @@ function find_gut_granules(path::String, names::Array{String, 1}, threshold,
         if out != ""
             out_path = joinpath(path, out)
             create_dir(out_path)
-            write_raw(joinpath(out_path, name*".nrrd"), gut_img, spacing(nrrd))
+            write_nrrd(joinpath(out_path, name*".nrrd"), gut_img, spacing(nrrd))
         end
         push!(gut_imgs, gut_img)
     end
