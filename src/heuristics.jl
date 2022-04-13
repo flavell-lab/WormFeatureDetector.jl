@@ -42,8 +42,8 @@ and that the head position of the worm is known in each time point.
 # Arguments:
 - `curves::Array{<:Any,1}`: Array of worm curves found so far. The method will attempt to find the worm's curvature in this array,
     and will compute and add it to the array if not found.
-- `img1::Array{<:AbstractFloat,3}`: image 1 array (volume)
-- `img2::Array{<:AbstractFloat,3}`: image 2 array (volume)
+- `img1::Array{<:AbstractFloat,3}`: image 1 array (volume), or `nothing` if the curve was already computed
+- `img2::Array{<:AbstractFloat,3}`: image 2 array (volume), or `nothing` if the curve was already computed
 - `t1::Int`: time point 1
 - `t2::Int`: time point 2
 - `head_pos_t1::Dict`: head position dictionary at time point 1
@@ -56,34 +56,34 @@ and that the head position of the worm is known in each time point.
 - `headpt::Integer`: First position from head (in index of curves) to be aligned. Default 4.
 - `tailpt::Integer`: Second position from head (in index of curves) to be aligned. Default 7.
 """
-function elastix_difficulty_wormcurve!(curves::Array{<:Any,1}, img1::Array{<:AbstractFloat,3}, img2::Array{<:AbstractFloat,3},
-        t1::Int, t2::Int, head_pos_t1::Dict, head_pos_t2::Dict; downscale::Int=3, num_points::Int=9, headpt::Int=4, tailpt::Int=7,
+function elastix_difficulty_wormcurve!(curves::Array{<:Any,1}, img1::Union{Nothing,Array{<:AbstractFloat,3}}, img2::Union{Nothing,Array{<:AbstractFloat,3}},
+        t1::Int, t2::Int, head_pos_t1::Union{Nothing,Dict}, head_pos_t2::Union{Nothing,Dict}; downscale::Int=3, num_points::Int=9, headpt::Int=4, tailpt::Int=7,
         path_dir_fig::Union{Nothing,String}=nothing)
 
     img1 = maxprj(img1, dims=3)
     img2 = maxprj(img2, dims=3)
 
-    if isassigned(curves, t1)
+    if isnothing(img1)
         x1_c, y1_c = curves[t1]
     else
         x1_c, y1_c = find_curve(img1, downscale, head_pos_t1[t1]./2^downscale, num_points)
     end
     
-    if isassigned(curves, t2)
+    if isnothing(img2)
         x2_c, y2_c = curves[t2]
     else
         x2_c, y2_c = find_curve(img2, downscale, head_pos_t2[t2]./2^downscale, num_points)
     end
 
     if !isnothing(path_dir_fig)
-        if !isassigned(curves, t1)
+        if !isnothing(img1)
             create_dir(path_dir_fig)
             fig = heatmap(transpose(img1), fillcolor=:grays, aspect_ratio=1, flip=false, showaxis=false, legend=false)
             scatter!(fig, x1_c.-1, y1_c.-1, color="red");
             scatter!(fig, [x1_c[1].-1], [y1_c[1].-1], color="cyan", markersize=5);
             savefig(fig, joinpath(path_dir_fig, "$(t1).png"));
         end
-        if !isassigned(curves, t2)
+        if !isnothing(img2)
             create_dir(path_dir_fig)
             fig = heatmap(transpose(img2), fillcolor=:grays, aspect_ratio=1, flip=false, showaxis=false, legend=false)
             scatter!(fig, x2_c.-1, y2_c.-1, color="red");
@@ -144,16 +144,25 @@ function elastix_difficulty_wormcurve!(curves::Array{<:Any,1}, param::Dict, para
         end
     end
 
-    path_nrrd_t1 = joinpath(param_path_fixed["path_dir_nrrd_filt"],
-        param_path_fixed["get_basename"](t1, ch) * ".nrrd")
-    path_nrrd_t2 = joinpath(param_path_moving["path_dir_nrrd_filt"],
-        param_path_moving["get_basename"](t2 - max_fixed_t, ch) * ".nrrd")
+    if isassigned(curves, t1)
+        img1 = nothing
+        head_pos_t1 = nothing
+    else
+        path_nrrd_t1 = joinpath(param_path_fixed["path_dir_nrrd_filt"],
+            param_path_fixed["get_basename"](t1, ch) * ".nrrd")
+        img1 = Float64.(read_img(NRRD(path_nrrd_t1)))
+        head_pos_t1 = read_head_pos(param_path_fixed["path_head_pos"])
+    end
 
-    img1 = Float64.(read_img(NRRD(path_nrrd_t1)))
-    img2 = Float64.(read_img(NRRD(path_nrrd_t2)))
-    
-    head_pos_t1 = read_head_pos(param_path_fixed["path_head_pos"])
-    head_pos_t2 = read_head_pos(param_path_moving["path_head_pos"])
+    if isassigned(curves, t2)
+        img2 = nothing
+        head_pos_t2 = nothing
+    else
+        path_nrrd_t2 = joinpath(param_path_moving["path_dir_nrrd_filt"],
+            param_path_moving["get_basename"](t2 - max_fixed_t, ch) * ".nrrd")
+        img2 = Float64.(read_img(NRRD(path_nrrd_t2)))
+        head_pos_t2 = read_head_pos(param_path_moving["path_head_pos"])
+    end
 
     if !isnothing(max_fixed_t)
         head_pos_t2_shifted = Dict()
