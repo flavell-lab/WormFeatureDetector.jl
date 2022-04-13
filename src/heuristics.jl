@@ -164,7 +164,7 @@ function elastix_difficulty_wormcurve!(curves::Array{<:Any,1}, param::Dict, para
         head_pos_t2 = read_head_pos(param_path_moving["path_head_pos"])
     end
 
-    if !isnothing(max_fixed_t)
+    if !isnothing(max_fixed_t) && !isnothing(head_pos_t2)
         head_pos_t2_shifted = Dict()
         for t in keys(head_pos_t2)
             head_pos_t2_shifted[t + max_fixed_t] = head_pos_t2[t]
