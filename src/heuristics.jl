@@ -60,8 +60,13 @@ function elastix_difficulty_wormcurve!(curves::Array{<:Any,1}, img1::Union{Nothi
         t1::Int, t2::Int, head_pos_t1::Union{Nothing,Dict}, head_pos_t2::Union{Nothing,Dict}; downscale::Int=3, num_points::Int=9, headpt::Int=4, tailpt::Int=7,
         path_dir_fig::Union{Nothing,String}=nothing)
 
-    img1 = maxprj(img1, dims=3)
-    img2 = maxprj(img2, dims=3)
+    if !isnothing(img1)
+        img1 = maxprj(img1, dims=3)
+    end
+
+    if !isnothing(img2)
+        img2 = maxprj(img2, dims=3)
+    end
 
     if isnothing(img1)
         x1_c, y1_c = curves[t1]
