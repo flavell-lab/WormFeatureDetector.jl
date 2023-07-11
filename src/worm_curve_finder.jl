@@ -1,4 +1,6 @@
 """
+    align(curve1_x, curve1_y, curve2_x, curve2_y; headpt::Integer=4, tailpt::Integer=7)
+
 Aligns the points `headpt` and `tailpt` of curve 2 to match curve 1, and returns the transformed curve 2.
 Translates, rotates, and scales all other curve-points accordingly.
 # Arguments:
@@ -36,6 +38,8 @@ function align(curve1_x, curve1_y,
 end
 
 """
+    curve_distance(x1_c, y1_c, x2_c, y2_c; headpt::Integer=4, tailpt::Integer=7)
+
 Computes the difficulty of an elastix transform
 using the heuristic that more worm-unbending is harder.
 # Arguments:

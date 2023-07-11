@@ -1,4 +1,6 @@
 """
+    find_gut_granules_img(img::Array{UInt16, 3}, threshold::Real, density::Real, radius)
+
 Generates a mask containing predicted gut granules from an image. The mask has the same dimensions as the image,
 with entry 1 for a pixel that is a gut granule, and 0 for a pixel that isn't.
 
@@ -30,6 +32,8 @@ function find_gut_granules_img(img::Array{UInt16, 3}, threshold::Real, density::
 end
 
 """
+    find_gut_granules(path::String, names::Array{String, 1}, threshold, density, radius; dir_nrrd="NRRD", out="")
+
 Finds, returns, and outputs gut granule masks for a set of images. The masks filter out the gut granules, so
 1 is not a gut granule, and 0 is a gut granule.
 
@@ -65,6 +69,12 @@ end
 
 
 """
+    find_hsn(
+        path::String, frames, dir_nrrd::String, img_prefix::String, channel::Integer,
+        threshold_outer::Real, density_outer::Real, radius_outer, 
+        threshold_inner::Real, density_inner::Real, radius_inner, radius_detection; outfile::String=""
+    )
+
 Finds location of the HSN soma in a frame. First threshold to remove densely-packed regions that might
 correspond to gut fluorescence or neuropil (by excluding too-dense regions), then threshold again to ensure high local density
 (by excluding not-dense regions). If multiple regions are still included, the larger region is chosen.
@@ -168,6 +178,8 @@ end
 
 
 """
+    find_nerve_ring(path::String, frames, dir_nrrd::String, img_prefix::String, channel::Integer, threshold::Real, region, radius; outfile::String="")
+
 Finds location of the nerve ring in a frame. Can optionally output nerve ring locations to a file for use with heuristics.
 
 # Arguments:

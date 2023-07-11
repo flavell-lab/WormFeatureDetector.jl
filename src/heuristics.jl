@@ -1,4 +1,9 @@
 """
+    elastix_difficulty_hsn_nr(
+        rootpath::String, frame1::Integer, frame2::Integer, 
+        hsn_location_file::String, nr_location_file::String; nr_weight::Real=1
+    )
+
 Computes registration difficulty between two frames based on the HSN and nerve ring locations
 
 # Arguments:
@@ -35,6 +40,12 @@ function elastix_difficulty_hsn_nr(rootpath::String, frame1::Integer, frame2::In
 end
 
 """
+    elastix_difficulty_wormcurve!(
+        curves::Array{<:Any,1}, img1::Union{Nothing,Array{<:AbstractFloat,3}}, img2::Union{Nothing,Array{<:AbstractFloat,3}},
+        t1::Int, t2::Int, head_pos_t1::Union{Nothing,Dict}, head_pos_t2::Union{Nothing,Dict}; downscale::Int=3, 
+        num_points::Int=9, headpt::Int=4, tailpt::Int=7, path_dir_fig::Union{Nothing,String}=nothing
+    )
+
 Computes registration difficulty between two time points based on the worm curvature heuristic.
 Requires that the data be filtered in some way (eg: total-variation filtering),
 and that the head position of the worm is known in each time point.
@@ -108,6 +119,11 @@ function elastix_difficulty_wormcurve!(curves::Array{<:Any,1}, img1::Union{Nothi
 end
 
 """
+    elastix_difficulty_wormcurve!(
+        curves::Array{<:Any,1}, param::Dict, param_path_fixed::Dict, param_path_moving::Dict, t1::Int, t2::Int, ch::Int;
+        save_curve_fig::Bool=false, max_fixed_t::Union{Integer,Nothing}=nothing
+    )
+
 Computes registration difficulty between two time points based on the worm curvature heuristic.
 Requires that the data be filtered in some way (eg: total-variation filtering),
 and that the head position of the worm is known in each time point.
