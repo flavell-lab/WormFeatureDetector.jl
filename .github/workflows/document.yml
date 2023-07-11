@@ -83,17 +83,17 @@ jobs:
           ~/.julia/conda/3/x86_64/bin/pip install .
       - name: Install packages
         run: julia --project=docs/ -e 'using Pkg;
-          Pkg.develop(PackageSpec(path="./FlavellBase.jl"));
-          Pkg.develop(PackageSpec(path="./TotalVariation.jl"));
-          Pkg.develop(PackageSpec(path="./SegmentationStats.jl"));
-          Pkg.develop(PackageSpec(path="./GPUFilter.jl"));
-          Pkg.develop(PackageSpec(path="./NRRDIO.jl")); 
-          Pkg.develop(PackageSpec(path="./FFTRegGPU.jl")); 
-          Pkg.develop(PackageSpec(path="./ImageDataIO.jl")); 
-          Pkg.develop(PackageSpec(path="./UNet2D.jl"));
-          Pkg.develop(PackageSpec(path="./WormCurveFinder.jl")); 
-          Pkg.develop(PackageSpec(path="./Clustering.jl")); 
-          Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+          Pkg.add(PackageSpec(path="./FlavellBase.jl"));
+          Pkg.add(PackageSpec(path="./TotalVariation.jl"));
+          Pkg.add(PackageSpec(path="./SegmentationStats.jl"));
+          Pkg.add(PackageSpec(path="./GPUFilter.jl"));
+          Pkg.add(PackageSpec(path="./NRRDIO.jl")); 
+          Pkg.add(PackageSpec(path="./FFTRegGPU.jl")); 
+          Pkg.add(PackageSpec(path="./ImageDataIO.jl")); 
+          Pkg.add(PackageSpec(path="./UNet2D.jl"));
+          Pkg.add(PackageSpec(path="./WormCurveFinder.jl")); 
+          Pkg.add(PackageSpec(path="./Clustering.jl")); 
+          Pkg.add(PackageSpec(path=pwd())); Pkg.instantiate()'
       - name: Build and deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # For authentication with GitHub Actions token
