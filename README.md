@@ -1,8 +1,15 @@
 # WormFeatureDetector.jl
 
-A collection of heuristics for locating various features of the worm.
+[![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url]
 
-The API is available [here](https://flavell-lab.github.io/WormFeatureDetector.jl/dev/).
+
+[docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
+[docs-stable-url]: https://flavell-lab.github.io/WormFeatureDetector.jl/stable/
+
+[docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
+[docs-latest-url]: https://flavell-lab.github.io/WormFeatureDetector.jl/dev/
+
+A collection of heuristics for locating various features of the worm.
 
 ## Prerequisites
 
